@@ -1,9 +1,3 @@
-# Kalshi App Repo
-
-Monorepo layout: the application lives in **`PredictionMarketApp/`** (that folder is the **app root** for Python, npm, and run commands below). GitHub Actions workflows are in **`.github/workflows/`** at this repository root.
-
----
-
 ## Installation and setup
 
 ### Requirements
