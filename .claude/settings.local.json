@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import fastapi\")",
+      "Bash(python -c \"import uvicorn\")",
+      "Bash(python -c \"import fastapi; print\\('fastapi ok'\\)\")",
+      "Bash(python -c \"import uvicorn; print\\('uvicorn ok'\\)\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s http://127.0.0.1:8000/)",
+      "Bash(curl -s http://127.0.0.1:8000/api/bots)"
+    ]
+  }
+}

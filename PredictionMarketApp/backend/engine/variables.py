@@ -56,7 +56,7 @@ def _apply_bot_rest_enrichment(ticker: str, market: dict, variables: dict) -> No
         variables["Ask"] = _f(ya)
     bid_v = variables.get("Bid")
     ask_v = variables.get("Ask")
-    if yes_spread_is_degenerate(bid_v, ask_v) and "YES_price" in variables:
+    if (bid_v is None or ask_v is None or yes_spread_is_degenerate(bid_v, ask_v)) and "YES_price" in variables:
         mid = float(variables["YES_price"])
         variables["Bid"] = round(max(0.0, mid - 0.5), 2)
         variables["Ask"] = round(min(100.0, mid + 0.5), 2)
@@ -94,8 +94,17 @@ async def _resolve_all_core(
                 filled_from_ws = True
             if filled_from_ws:
                 variables["LastTraded"] = _f(snap.last_traded)
-                variables["Bid"] = _f(snap.yes_bid_pct)
-                variables["Ask"] = _f(snap.yes_ask_pct)
+                if tight_book:
+                    variables["Bid"] = _f(snap.yes_bid_pct)
+                    variables["Ask"] = _f(snap.yes_ask_pct)
+                else:
+                    # Degenerate WS book (bid~0 / ask~100): use implied mid ± 0.5 as a
+                    # stand-in so callers never see the meaningless 0/99 sentinels.
+                    # _apply_bot_rest_enrichment will overwrite with real REST values below.
+                    mid = variables.get("YES_price")
+                    if mid is not None:
+                        variables["Bid"] = round(max(0.0, float(mid) - 0.5), 2)
+                        variables["Ask"] = round(min(100.0, float(mid) + 0.5), 2)
                 variables["FillPrice"] = _get_fill_price(bot_id, ticker)
                 variables["TimeToExpiry"] = _f(snap.minutes_to_expiry)
                 variables["DistanceFromStrike"] = _f(snap.distance_from_strike)
@@ -134,6 +143,15 @@ async def _resolve_all_core(
                     unavailable.add(k)
         if market_rest and (filled_from_ws or "YES_price" in variables):
             _apply_bot_rest_enrichment(ticker, market_rest, variables)
+
+        # Flip Bid/Ask to the NO book when the bot trades the NO side.
+        # Binary contract: no_bid = 100 - yes_ask, no_ask = 100 - yes_bid.
+        cs = str(dict(bot).get("contract_side") or "yes").lower().strip()
+        if cs == "no" and "Bid" in variables and "Ask" in variables:
+            yes_bid = variables["Bid"]
+            yes_ask = variables["Ask"]
+            variables["Bid"] = round(100.0 - yes_ask, 2)
+            variables["Ask"] = round(100.0 - yes_bid, 2)
 
     client = get_kalshi_client()
     daily_pnl = 0.0
