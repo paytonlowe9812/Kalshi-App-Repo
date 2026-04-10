@@ -183,6 +183,9 @@ cython_debug/
 # Claude Code / local AI (do not publish)
 .claude/
 
+# Monorepo only: do not init a second Git repo inside the app folder
+PredictionMarketApp/.git/
+
 # Per-machine launch scripts (create with: python PredictionMarketApp/scripts/generate_launchers.py)
 PredictionMarketApp/launch.ps1
 PredictionMarketApp/launch.bat
