@@ -125,15 +125,22 @@ def get_available_variables(id: int):
     groups.append({
         "label": "MARKET DATA",
         "vars": [
-            {"name": "YES_price", "desc": "YES bid (cents) on bot market"},
-            {"name": "NO_price", "desc": "NO bid (cents) on bot market"},
+            {"name": "YES_price", "desc": "YES implied price (0-100)"},
+            {"name": "NO_price",  "desc": "NO implied price (0-100)"},
+            {"name": "Bid",       "desc": "Best bid for your contract side (0-100)"},
+            {"name": "Ask",       "desc": "Best ask for your contract side (0-100)"},
+            {"name": "LastTraded","desc": "Last traded price (0-100)"},
+            {"name": "FillPrice", "desc": "Your entry price on this market"},
+            {"name": "TimeToExpiry",      "desc": "Minutes until market expiry"},
+            {"name": "DistanceFromStrike","desc": "Distance of current price from strike"},
         ],
     })
 
     groups.append({
         "label": "PORTFOLIO",
         "vars": [
-            {"name": "PositionSize", "desc": "Contracts in this market"},
+            {"name": "PositionSize", "desc": "Contracts held in this market"},
+            {"name": "DailyPnL",     "desc": "Today's realised P&L"},
         ],
     })
 
@@ -142,8 +149,14 @@ def get_available_variables(id: int):
         markets = db.execute(
             "SELECT * FROM sentiment_index_markets WHERE index_id = ?", (idx["id"],)
         ).fetchall()
-        # Index aggregates (Score, BullCount, etc.) stay in the engine but are hidden from the picker.
-        index_vars: list[dict] = []
+        iname = idx['name']
+        index_vars: list[dict] = [
+            {"name": f"{iname}.Score",     "desc": "Average YES % across all markets in index"},
+            {"name": f"{iname}.AvgYES",    "desc": "Average YES implied % in index"},
+            {"name": f"{iname}.AvgNO",     "desc": "Average NO implied % in index"},
+            {"name": f"{iname}.BullCount", "desc": "Number of markets with YES > 50"},
+            {"name": f"{iname}.BearCount", "desc": "Number of markets with YES ≤ 50"},
+        ]
         # Per-market vars: duplicate labels in one index overwrite in the engine (last row wins).
         # Dedupe the dropdown the same way; include ticker in description for disambiguation.
         by_name: dict[str, dict] = {}

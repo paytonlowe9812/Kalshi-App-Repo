@@ -14,6 +14,8 @@ function inferSeriesFromMarket(ticker) {
 export default function RuleEditor({ onOpenSimulator }) {
   const { activeBotId, bulkEditIds } = useAppStore();
   const isBulk = bulkEditIds.length > 1;
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkSaved, setBulkSaved] = useState(false);
   const [bot, setBot] = useState(null);
   const [rules, setRules] = useState([]);
   const [editingName, setEditingName] = useState(false);
@@ -40,25 +42,44 @@ export default function RuleEditor({ onOpenSimulator }) {
 
   useEffect(() => { fetchBot(); }, [fetchBot]);
 
+  const buildPayload = (updatedRules) => updatedRules.map((r, i) => ({
+    line_number: i + 1, line_type: r.line_type,
+    left_operand: r.left_operand || null, operator: r.operator || null,
+    right_operand: r.right_operand || null, action_type: r.action_type || null,
+    action_params: r.action_params || null, group_id: r.group_id || null,
+    group_logic: r.group_logic || null,
+  }));
+
+  // Auto-save always goes to the active bot only (single-bot or bulk template).
   const saveRules = useCallback((updatedRules) => {
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(async () => {
-      const payload = updatedRules.map((r, i) => ({
-        line_number: i + 1, line_type: r.line_type,
-        left_operand: r.left_operand || null, operator: r.operator || null,
-        right_operand: r.right_operand || null, action_type: r.action_type || null,
-        action_params: r.action_params || null, group_id: r.group_id || null,
-        group_logic: r.group_logic || null,
-      }));
-      const targets = bulkEditIds.length > 1 ? bulkEditIds : [activeBotId];
-      await Promise.all(targets.map((id) =>
-        fetch(`/api/bots/${id}/rules`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rules: payload }),
-        })
-      ));
+      const { activeBotId: bid } = useAppStore.getState();
+      if (!bid) return;
+      await fetch(`/api/bots/${bid}/rules`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules: buildPayload(updatedRules) }),
+      });
     }, 800);
-  }, [activeBotId, bulkEditIds]);
+  }, []);
+
+  // Explicit bulk save — writes the current editor rules to every selected bot sequentially.
+  const saveBulkAll = async () => {
+    const { bulkEditIds: ids, activeBotId: bid } = useAppStore.getState();
+    const targets = ids.length > 1 ? ids : [bid];
+    const payload = buildPayload(rules);
+    setBulkSaving(true);
+    setBulkSaved(false);
+    for (const id of targets) {
+      await fetch(`/api/bots/${id}/rules`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules: payload }),
+      });
+    }
+    setBulkSaving(false);
+    setBulkSaved(true);
+    setTimeout(() => setBulkSaved(false), 2000);
+  };
 
   const updateRule = (index, updatedRule) => { const n = [...rules]; n[index] = updatedRule; setRules(n); saveRules(n); };
   const addLine = (lineType) => {
@@ -123,10 +144,19 @@ export default function RuleEditor({ onOpenSimulator }) {
     <div className="h-full flex">
       <div className="flex-1 flex flex-col min-w-0">
         {isBulk && (
-          <div className="flex items-center gap-2 px-2.5 py-1 bg-terminal-amber-faint border-b border-terminal-amber text-terminal-amber-bright text-[10px] font-mono">
-            <span className="font-bold">BULK EDIT</span>
-            <span className="text-terminal-amber">—</span>
-            <span>{bulkEditIds.length} bots selected. Rules, contract side &amp; auto-roll apply to all. Name and market are per-bot.</span>
+          <div className="flex items-center gap-2 px-2.5 py-1.5 bg-terminal-amber-faint border-b border-terminal-amber text-terminal-amber-bright text-[10px] font-mono">
+            <div className="flex-1 min-w-0">
+              <span className="font-bold">BULK EDIT</span>
+              <span className="text-terminal-amber mx-1">—</span>
+              <span>{bulkEditIds.length} bots selected. Edit here, then save to all.</span>
+            </div>
+            <button
+              onClick={saveBulkAll}
+              disabled={bulkSaving}
+              className="shrink-0 px-2.5 py-1 border border-terminal-amber text-terminal-amber-bright hover:bg-terminal-amber hover:text-terminal-bg font-mono text-[10px] font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {bulkSaving ? 'SAVING...' : bulkSaved ? 'SAVED ✓' : `SAVE TO ALL ${bulkEditIds.length}`}
+            </button>
           </div>
         )}
         <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 px-2 md:px-2.5 py-1.5 md:py-2 border-b border-terminal-border-dim">

@@ -8,7 +8,10 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(curl -s http://127.0.0.1:8000/)",
       "Bash(curl -s http://127.0.0.1:8000/api/bots)",
-      "Bash(ls C:\\\\Users\\\\pman\\\\Kalshi-App-Repo\\\\PredictionMarketApp\\\\launch*)"
+      "Bash(ls C:\\\\Users\\\\pman\\\\Kalshi-App-Repo\\\\PredictionMarketApp\\\\launch*)",
+      "Bash(xargs grep:*)",
+      "Bash(curl -s \"http://127.0.0.1:8000/api/bots/5/available-variables\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(g['label'], '->', [v['name'] for v in g['vars']]\\) for g in d['groups']]\")"
     ]
   }
 }
