@@ -206,6 +206,28 @@ DEFAULT_SETTINGS = {
 }
 
 
+def _dedupe_sentiment_index_markets(conn: sqlite3.Connection) -> None:
+    """Remove duplicate (index_id, ticker) rows and enforce uniqueness (fixes duplicate coins in the index bar)."""
+    try:
+        conn.execute(
+            """
+            DELETE FROM sentiment_index_markets
+            WHERE id NOT IN (
+                SELECT MIN(id) FROM sentiment_index_markets GROUP BY index_id, ticker
+            )
+            """
+        )
+    except Exception:
+        pass
+    try:
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_sentiment_index_markets_index_ticker "
+            "ON sentiment_index_markets(index_id, ticker)"
+        )
+    except Exception:
+        pass
+
+
 def init_db():
     conn = get_db()
     for sql in MIGRATIONS:
@@ -244,5 +266,7 @@ def init_db():
             "VALUES (?, 2, 'THEN', 'STOP')",
             (bot_id,),
         )
+
+    _dedupe_sentiment_index_markets(conn)
 
     conn.commit()

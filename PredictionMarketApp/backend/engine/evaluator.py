@@ -34,12 +34,15 @@ def _parse_action(rule: dict) -> Action | None:
     return Action(
         type=action_type,
         contracts=params.get("contracts"),
+        contracts_var=params.get("contracts_var"),
         price=params.get("price"),
+        price_var=params.get("price_var"),
         side=params.get("side"),
         var_name=params.get("var_name"),
         value=params.get("value"),
         message=params.get("message"),
         line=params.get("line"),
+        line_var=params.get("line_var"),
         fired_line=rule.get("line_number"),
     )
 
@@ -103,7 +106,14 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
                 params = json.loads(rule.get("action_params") or "{}")
             except (ValueError, TypeError):
                 params = {}
-            target = params.get("line", 0)
+            line_var = (str(params.get("line_var") or "")).strip()
+            if line_var and line_var in variables:
+                try:
+                    target = int(round(float(variables[line_var])))
+                except (TypeError, ValueError):
+                    target = params.get("line", 0)
+            else:
+                target = params.get("line", 0)
             target_idx = next(
                 (i for i, r in enumerate(rules_list) if r["line_number"] == target),
                 None,

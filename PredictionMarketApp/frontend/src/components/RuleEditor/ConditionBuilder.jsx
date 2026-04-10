@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import OperatorPicker, { getOperatorDisplay } from './OperatorPicker';
 import useBotAvailableVariables from '../../hooks/useBotAvailableVariables';
 
@@ -8,31 +8,46 @@ function numericish(s) {
   return !Number.isNaN(n) && Number.isFinite(n);
 }
 
-/** Variable mode: empty, known name, or unknown token while still loading. Value mode: non-empty literal number not a variable name. */
-function isVariableMode(operand, allNames, loading) {
+/** Returns true if the stored operand looks like a variable (or is empty/null). */
+function looksLikeVariable(operand, allNames) {
   if (operand == null || operand === '') return true;
   if (allNames.includes(operand)) return true;
-  if (loading && allNames.length === 0 && !numericish(operand)) return true;
   return false;
 }
 
 function OperandSide({ label, operandKey, rule, onUpdate, groups, loading, allNames }) {
   const value = rule[operandKey];
-  const variableMode = isVariableMode(value, allNames, loading);
 
-  const setVariableMode = () => {
+  // Track variable-vs-value mode explicitly so that clearing the number field
+  // does NOT jump back to the variable dropdown.
+  const [inValueMode, setInValueMode] = useState(() => {
+    // Start in value mode if the stored operand is a plain number (not a var name).
+    return numericish(value) && !allNames.includes(value);
+  });
+
+  // If the rule is replaced from outside (e.g. snapshot restore or fresh bot load),
+  // sync the mode — but only when allNames has loaded and the value is clearly one or the other.
+  useEffect(() => {
+    if (loading) return;
+    if (value != null && value !== '' && allNames.includes(value)) {
+      setInValueMode(false);
+    } else if (numericish(value) && !allNames.includes(value)) {
+      setInValueMode(true);
+    }
+  }, [value, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const variableMode = !inValueMode;
+
+  const switchToVariable = () => {
+    setInValueMode(false);
     onUpdate({ ...rule, [operandKey]: null });
   };
 
-  const setValueMode = () => {
+  const switchToValue = () => {
+    setInValueMode(true);
     const v = value;
     const keep =
-      v != null &&
-      v !== '' &&
-      !allNames.includes(v) &&
-      numericish(v)
-        ? v
-        : '0';
+      v != null && v !== '' && !allNames.includes(v) && numericish(v) ? v : '0';
     onUpdate({ ...rule, [operandKey]: keep });
   };
 
@@ -56,14 +71,14 @@ function OperandSide({ label, operandKey, rule, onUpdate, groups, loading, allNa
         <button
           type="button"
           className={`${toggleBtn(variableMode)} rounded-l-sm`}
-          onClick={setVariableMode}
+          onClick={switchToVariable}
         >
           variable
         </button>
         <button
           type="button"
           className={`${toggleBtn(!variableMode)} rounded-r-sm border-l border-terminal-border-dim`}
-          onClick={setValueMode}
+          onClick={switchToValue}
         >
           value
         </button>
@@ -97,7 +112,16 @@ function OperandSide({ label, operandKey, rule, onUpdate, groups, loading, allNa
           step="any"
           className={`${selectClass} w-20 md:flex-1 md:min-w-[5rem] md:max-w-[160px]`}
           value={value ?? ''}
-          onChange={(e) => onUpdate({ ...rule, [operandKey]: e.target.value })}
+          onChange={(e) => {
+            // Store raw string so field can be empty mid-type; never switch to variable mode.
+            onUpdate({ ...rule, [operandKey]: e.target.value === '' ? '' : e.target.value });
+          }}
+          onBlur={(e) => {
+            // On blur with empty/invalid input, reset to 0 instead of leaving blank.
+            if (e.target.value === '' || isNaN(Number(e.target.value))) {
+              onUpdate({ ...rule, [operandKey]: '0' });
+            }
+          }}
           aria-label={`${label} numeric value`}
         />
       )}

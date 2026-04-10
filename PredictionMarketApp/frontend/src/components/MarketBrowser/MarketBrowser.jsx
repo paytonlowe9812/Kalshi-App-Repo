@@ -84,8 +84,8 @@ export default function MarketBrowser() {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="px-2 md:px-3 py-2 border-b border-terminal-border-dim space-y-2 md:space-y-0">
+    <div className="h-full flex flex-col max-w-5xl mx-auto w-full">
+      <div className="px-3 md:px-4 py-2 border-b border-terminal-border-dim space-y-2 md:space-y-0">
         <div className="flex items-center gap-1.5">
           <input
             type="text"

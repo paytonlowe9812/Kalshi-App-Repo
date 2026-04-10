@@ -14,6 +14,7 @@ export default function PortfolioScreen() {
 
   return (
     <div className="h-full overflow-y-auto pb-4">
+      <div className="max-w-5xl mx-auto">
       <StatsRow summary={summary} />
       <div className="px-3 md:px-4 py-3">
         <div className="card rounded-none">
@@ -36,6 +37,7 @@ export default function PortfolioScreen() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

@@ -16,6 +16,34 @@ from backend.engine.index_auto_roll import infer_series_ticker
 router = APIRouter(prefix="/api/indexes", tags=["indexes"])
 
 
+def _dedupe_market_rows(rows: list) -> list:
+    """First row wins per ticker (DB may have legacy duplicates before unique index)."""
+    seen: set[str] = set()
+    out = []
+    for m in rows:
+        t = (m["ticker"] or "").strip()
+        if not t or t in seen:
+            continue
+        seen.add(t)
+        out.append(m)
+    return out
+
+
+def _dedupe_index_markets_payload(markets: list[dict] | None) -> list[dict]:
+    """Skip duplicate tickers on create/update (first occurrence keeps sort order)."""
+    if not markets:
+        return []
+    seen: set[str] = set()
+    out: list[dict] = []
+    for m in markets:
+        t = (m.get("ticker") or "").strip()
+        if not t or t in seen:
+            continue
+        seen.add(t)
+        out.append(m)
+    return out
+
+
 def _index_market_row(index_id: int, m: dict, sort_order: int) -> tuple:
     t = (m.get("ticker") or "").strip()
     label = (m.get("label") or "").strip() or t or "market"
@@ -38,9 +66,10 @@ def list_indexes():
             "SELECT * FROM sentiment_index_markets WHERE index_id = ? ORDER BY sort_order",
             (idx["id"],),
         ).fetchall()
+        deduped = _dedupe_market_rows(list(markets))
         result.append({
             **dict(idx),
-            "markets": [dict(m) for m in markets],
+            "markets": [dict(m) for m in deduped],
         })
     return result
 
@@ -48,16 +77,17 @@ def list_indexes():
 @router.post("")
 async def create_index(data: IndexCreate):
     db = get_db()
+    markets_in = _dedupe_index_markets_payload([dict(m) for m in data.markets])
     db.execute("INSERT INTO sentiment_indexes (name) VALUES (?)", (data.name,))
     index_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
-    for i, m in enumerate(data.markets):
+    for i, m in enumerate(markets_in):
         db.execute(
             "INSERT INTO sentiment_index_markets (index_id, ticker, label, sort_order, series_ticker, auto_roll) "
             "VALUES (?, ?, ?, ?, ?, ?)",
             _index_market_row(index_id, m, i),
         )
     db.commit()
-    tickers = [m["ticker"] for m in data.markets if m.get("ticker")]
+    tickers = [m["ticker"] for m in markets_in if m.get("ticker")]
     if tickers:
         await ws_manager.subscribe(tickers)
     return {"id": index_id, "status": "created"}
@@ -69,8 +99,9 @@ async def update_index(id: int, data: IndexUpdate):
     if data.name is not None:
         db.execute("UPDATE sentiment_indexes SET name = ? WHERE id = ?", (data.name, id))
     if data.markets is not None:
+        markets_in = _dedupe_index_markets_payload([dict(m) for m in data.markets])
         db.execute("DELETE FROM sentiment_index_markets WHERE index_id = ?", (id,))
-        for i, m in enumerate(data.markets):
+        for i, m in enumerate(markets_in):
             db.execute(
                 "INSERT INTO sentiment_index_markets (index_id, ticker, label, sort_order, series_ticker, auto_roll) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
@@ -78,7 +109,7 @@ async def update_index(id: int, data: IndexUpdate):
             )
     db.commit()
     if data.markets is not None:
-        tickers = [m["ticker"] for m in data.markets if m.get("ticker")]
+        tickers = [m["ticker"] for m in markets_in if m.get("ticker")]
         if tickers:
             await ws_manager.subscribe(tickers)
     return {"status": "updated"}
@@ -104,7 +135,7 @@ async def get_live_index(id: int):
     ).fetchall()
 
     client = get_kalshi_client()
-    market_rows = list(markets)
+    market_rows = _dedupe_market_rows(list(markets))
     rest_by_ticker: Dict[str, Optional[Dict[str, Any]]] = {}
     if client and market_rows:
 
@@ -179,7 +210,7 @@ async def get_live_index(id: int):
             "bullish": bullish,
         })
 
-    count = len(markets) or 1
+    count = len(market_rows) or 1
     avg_yes = round(total_yes / count, 1)
     avg_no = round(total_no / count, 1)
     score = round(avg_yes, 0)

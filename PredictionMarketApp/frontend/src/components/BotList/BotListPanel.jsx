@@ -152,7 +152,8 @@ export default function BotListPanel() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-2 md:px-3 py-2 border-b border-terminal-border-dim gap-1.5 flex-wrap">
+      <div className="border-b border-terminal-border-dim">
+      <div className="max-w-3xl mx-auto flex items-center justify-between px-3 md:px-4 py-2 gap-1.5 flex-wrap">
         <h2 className="panel-header">BOT REGISTRY</h2>
         <div className="flex gap-1 items-center flex-wrap">
           {selectedIds.length > 0 && (
@@ -214,8 +215,10 @@ export default function BotListPanel() {
           <button type="button" onClick={() => setShowNewBot(true)} className="btn-primary text-[11px] py-0.5 px-1.5">NEW BOT</button>
         </div>
       </div>
+      </div>
 
-      <div className="hidden md:flex items-center gap-2 px-2 md:px-3 py-1 text-[9px] text-terminal-amber-dim uppercase tracking-wide border-b border-terminal-border-dim/50 bg-terminal-panel font-mono">
+      <div className="border-b border-terminal-border-dim/50 bg-terminal-panel">
+      <div className="hidden md:flex max-w-3xl mx-auto items-center gap-2 px-3 md:px-4 py-1 text-[9px] text-terminal-amber-dim uppercase tracking-wide font-mono">
         <label className="w-5 shrink-0 flex items-center justify-center cursor-pointer" title="Select all bots">
           <input
             ref={selectAllRef}
@@ -223,7 +226,7 @@ export default function BotListPanel() {
             checked={allVisibleSelected}
             onChange={toggleSelectAll}
             disabled={allBotIds.length === 0}
-            className="w-3.5 h-3.5 border-terminal-border-dim rounded-sm disabled:opacity-30"
+            className="registry-checkbox w-3.5 h-3.5 border border-terminal-amber bg-terminal-bg rounded-sm disabled:opacity-30"
             style={{ accentColor: '#D4A017' }}
             aria-label="Select all bots"
           />
@@ -235,8 +238,10 @@ export default function BotListPanel() {
         <span className="w-10 shrink-0 text-right" title="Run count">RUN</span>
         <span className="w-6 shrink-0" />
       </div>
+      </div>
 
       <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto">
         {loading && <div className="flex items-center justify-center h-32 text-xs text-terminal-amber-dim font-mono">LOADING...</div>}
         {isEmpty && !loading && (
           <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -284,6 +289,7 @@ export default function BotListPanel() {
             onToggleSelect={toggleSelect}
           />
         ))}
+        </div>
       </div>
 
       <ConfirmDialog open={confirmDelete !== null} onClose={() => setConfirmDelete(null)} onConfirm={() => deleteBot(confirmDelete)} title="DELETE BOT" message="Are you sure you want to delete this bot? This cannot be undone." confirmText="DELETE" danger />

@@ -60,7 +60,7 @@ export default function VarsPanel() {
 
   return (
     <div className="h-full flex flex-col min-h-0">
-      <div className="px-2 md:px-3 py-2 border-b border-terminal-border-dim flex flex-wrap items-center gap-2">
+      <div className="w-full max-w-3xl mx-auto px-3 md:px-4 py-2 border-b border-terminal-border-dim flex flex-wrap items-center gap-2">
         <h2 className="panel-header">LIVE VARIABLES</h2>
         <span className="text-[9px] font-mono text-terminal-amber-dim">
           bot #{activeBotId} | {POLL_MS}ms
@@ -68,15 +68,15 @@ export default function VarsPanel() {
         {loading && <span className="text-[9px] font-mono text-terminal-amber-muted">sync</span>}
       </div>
       {payload && !payload.kalshi_client_configured && (
-        <div className="mx-2 md:mx-3 mt-2 text-[10px] font-mono text-terminal-amber border border-terminal-amber/40 px-2 py-1.5 leading-snug">
+        <div className="max-w-3xl mx-auto px-3 md:px-4 mt-2 text-[10px] font-mono text-terminal-amber border border-terminal-amber/40 px-2 py-1.5 leading-snug">
           No active Kalshi API key. Open CONFIG, add or activate a key so REST market data can load (WebSocket also uses it).
         </div>
       )}
       {err && (
-        <div className="mx-2 md:mx-3 mt-2 text-[10px] font-mono text-terminal-red-text px-2">{err}</div>
+        <div className="max-w-3xl mx-auto px-3 md:px-4 mt-2 text-[10px] font-mono text-terminal-red-text px-2">{err}</div>
       )}
-      <div className="flex-1 overflow-auto px-1 md:px-2 py-2">
-        <table className="w-full text-left text-[11px] font-mono">
+      <div className="flex-1 overflow-auto">
+        <table className="w-full max-w-3xl mx-auto px-3 md:px-4 text-left text-[11px] font-mono">
           <thead className="sticky top-0 bg-terminal-bg border-b border-terminal-border-dim z-10">
             <tr>
               <th className="py-1 px-2 text-terminal-amber-dim">NAME</th>
@@ -99,7 +99,7 @@ export default function VarsPanel() {
         )}
       </div>
       {payload?.updated_at && (
-        <div className="px-2 md:px-3 py-1 border-t border-terminal-border-dim text-[9px] font-mono text-terminal-amber-muted truncate">
+        <div className="max-w-3xl mx-auto px-3 md:px-4 py-1 border-t border-terminal-border-dim text-[9px] font-mono text-terminal-amber-muted truncate">
           {payload.updated_at}
         </div>
       )}

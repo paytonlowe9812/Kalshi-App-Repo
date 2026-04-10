@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import useAppStore from '../../store/useAppStore';
 import useIndexStore from '../../store/useIndexStore';
 import IndexDropdown from './IndexDropdown';
@@ -48,6 +48,18 @@ export default function SentimentStrip() {
       cancelled = true;
     };
   }, [showIndexModal]);
+
+  const uniqueCoins = useMemo(() => {
+    const coins = liveData?.coins;
+    if (!Array.isArray(coins)) return [];
+    const seen = new Set();
+    return coins.filter((c) => {
+      const t = (c.ticker || '').trim();
+      if (!t || seen.has(t)) return false;
+      seen.add(t);
+      return true;
+    });
+  }, [liveData]);
 
   const addMarketsFromSavedList = (list) => {
     const items = list.items || [];
@@ -128,6 +140,24 @@ export default function SentimentStrip() {
       <div className="flex items-center gap-1 shrink-0">
         <IndexDropdown onCreateNew={openCreateModal} onEditIndex={openEditModal} />
 
+        <button
+          type="button"
+          onClick={openEditModal}
+          disabled={!activeIndexId}
+          title="Edit selected index"
+          className="flex-shrink-0 px-1 h-[22px] border border-terminal-border-dim hover:border-terminal-border text-terminal-amber-dim hover:text-terminal-amber items-center justify-center text-[8px] font-mono transition-colors disabled:opacity-30 disabled:pointer-events-none"
+        >
+          EDIT
+        </button>
+        <button
+          type="button"
+          onClick={openCreateModal}
+          title="Create new index"
+          className="flex-shrink-0 w-[22px] h-[22px] border border-terminal-border-dim hover:border-terminal-border text-terminal-amber-dim hover:text-terminal-amber items-center justify-center text-[11px] font-mono transition-colors"
+        >
+          +
+        </button>
+
         {liveData && (
           <div className="flex items-center gap-0.5 text-[9px] leading-none font-mono px-1 py-0.5 border border-terminal-border-dim">
             <span className="text-terminal-green-text">{liveData.bull_count}</span>
@@ -168,21 +198,11 @@ export default function SentimentStrip() {
             </button>
           </div>
         )}
-
-        <div className="ml-auto md:hidden">
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="flex-shrink-0 w-7 h-7 border border-terminal-border-dim active:border-terminal-border text-terminal-amber-dim active:text-terminal-amber flex items-center justify-center text-xs font-mono"
-          >
-            +
-          </button>
-        </div>
       </div>
 
       {liveData && (
         <div className="flex items-center gap-0.5 overflow-x-auto flex-1 min-w-0 py-0.5 md:py-0 -mx-0.5 px-0.5 scrollbar-none">
-          {liveData.coins?.map((coin) => (
+          {uniqueCoins.map((coin) => (
             <CoinTile
               key={coin.ticker}
               label={coin.label}
@@ -202,23 +222,6 @@ export default function SentimentStrip() {
       {!liveData && !activeIndexId && (
         <span className="text-[10px] text-terminal-amber-dim font-mono py-0.5 md:py-0">NO INDEX SELECTED</span>
       )}
-
-      <button
-        type="button"
-        onClick={openEditModal}
-        disabled={!activeIndexId}
-        title="Edit selected index"
-        className="hidden md:flex flex-shrink-0 px-1 h-[22px] border border-terminal-border-dim hover:border-terminal-border text-terminal-amber-dim hover:text-terminal-amber items-center justify-center text-[8px] font-mono transition-colors disabled:opacity-30 disabled:pointer-events-none"
-      >
-        EDIT
-      </button>
-      <button
-        type="button"
-        onClick={openCreateModal}
-        className="hidden md:flex flex-shrink-0 w-[22px] h-[22px] border border-terminal-border-dim hover:border-terminal-border text-terminal-amber-dim hover:text-terminal-amber items-center justify-center text-[11px] font-mono transition-colors"
-      >
-        +
-      </button>
 
       <Modal
         open={showIndexModal}

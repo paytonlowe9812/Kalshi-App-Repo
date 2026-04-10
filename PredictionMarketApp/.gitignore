@@ -12,9 +12,22 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Frontend (reinstall with npm install / ./install.sh)
+# Frontend
 frontend/node_modules/
+
+# Local environment / secrets (optional)
+.env
+.env.*
+!.env.example
+
+# Cursor IDE (local rules, MCP, agent metadata — do not publish)
+.cursor/
+
+# JetBrains
+.idea/
 
 # Editor / OS
 .DS_Store
 Thumbs.db
+*.swp
+*.swo

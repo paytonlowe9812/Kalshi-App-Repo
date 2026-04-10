@@ -53,7 +53,7 @@ export default function TradeLog() {
 
   return (
     <div className="h-full flex flex-col font-mono">
-      <div className="px-3 md:px-4 py-3 border-b border-terminal-border-dim space-y-2 md:space-y-0">
+      <div className="w-full max-w-5xl mx-auto px-3 md:px-4 py-3 border-b border-terminal-border-dim space-y-2 md:space-y-0">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
           <input
             type="text"
@@ -81,13 +81,15 @@ export default function TradeLog() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {loading && <div className="text-center text-sm text-terminal-amber-dim py-8 uppercase">LOADING...</div>}
-        {!loading && trades.length === 0 && (
-          <div className="text-center text-sm text-terminal-amber-dim py-12 uppercase">NO TRADES RECORDED YET</div>
-        )}
-        {sortedDays.map((day) => (
-          <TradeLogDay key={day} date={day} trades={groupedByDay[day]} />
-        ))}
+        <div className="max-w-5xl mx-auto px-3 md:px-4">
+          {loading && <div className="text-center text-sm text-terminal-amber-dim py-8 uppercase">LOADING...</div>}
+          {!loading && trades.length === 0 && (
+            <div className="text-center text-sm text-terminal-amber-dim py-12 uppercase">NO TRADES RECORDED YET</div>
+          )}
+          {sortedDays.map((day) => (
+            <TradeLogDay key={day} date={day} trades={groupedByDay[day]} />
+          ))}
+        </div>
       </div>
     </div>
   );

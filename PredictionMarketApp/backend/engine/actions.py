@@ -18,6 +18,44 @@ def _ref_price(variables: dict, contract_side: str) -> float:
     return float(variables.get("YES_price", 0))
 
 
+def _resolve_int(var_key: str | None, literal, variables: dict, fallback: int, label: str) -> int:
+    """Resolve an int param: try variable first, then literal, then fallback."""
+    key = (str(var_key or "")).strip()
+    if key:
+        if key in variables:
+            try:
+                return max(1, int(round(float(variables[key]))))
+            except (TypeError, ValueError):
+                pass
+        logger.warning("%s variable %r missing or not numeric; using %d", label, key, fallback)
+        return fallback
+    if literal is None:
+        return fallback
+    try:
+        return max(1, int(round(float(literal))))
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _resolve_float(var_key: str | None, literal, variables: dict, fallback: float, label: str) -> float:
+    """Resolve a float param: try variable first, then literal, then fallback."""
+    key = (str(var_key or "")).strip()
+    if key:
+        if key in variables:
+            try:
+                return float(variables[key])
+            except (TypeError, ValueError):
+                pass
+        logger.warning("%s variable %r missing or not numeric; using %s", label, key, fallback)
+        return fallback
+    if literal is None:
+        return fallback
+    try:
+        return float(literal)
+    except (TypeError, ValueError):
+        return fallback
+
+
 async def execute(bot_id: int, action: Action, variables: dict):
     db = get_db()
     bot = db.execute("SELECT * FROM bots WHERE id = ?", (bot_id,)).fetchone()
@@ -33,7 +71,7 @@ async def execute(bot_id: int, action: Action, variables: dict):
     cs = _bot_contract_side(bot)
 
     if action.type == "BUY":
-        contracts = action.contracts or 1
+        contracts = _resolve_int(action.contracts_var, action.contracts, variables, 1, "BUY contracts")
         if not is_paper and client and ticker:
             try:
                 await client.create_order(
@@ -51,7 +89,7 @@ async def execute(bot_id: int, action: Action, variables: dict):
         )
 
     elif action.type == "SELL":
-        contracts = action.contracts or 1
+        contracts = _resolve_int(action.contracts_var, action.contracts, variables, 1, "SELL contracts")
         if not is_paper and client and ticker:
             try:
                 await client.create_order(
@@ -69,8 +107,9 @@ async def execute(bot_id: int, action: Action, variables: dict):
         )
 
     elif action.type == "LIMIT":
-        contracts = action.contracts or 1
-        price = int((action.price or 50) * 100)
+        contracts = _resolve_int(action.contracts_var, action.contracts, variables, 1, "LIMIT contracts")
+        price_cents = _resolve_float(action.price_var, action.price, variables, 50.0, "LIMIT price")
+        price = int(price_cents * 100)
         lim_side = (action.side or cs).lower()
         if lim_side not in ("yes", "no"):
             lim_side = cs
@@ -89,7 +128,7 @@ async def execute(bot_id: int, action: Action, variables: dict):
         _log_trade(
             bot_id, bot["name"], ticker,
             f"PAPER_LIMIT_{lim_side.upper()}" if is_paper else f"LIMIT_{lim_side.upper()}",
-            contracts, action.price or 0, action.fired_line, is_paper,
+            contracts, price_cents, action.fired_line, is_paper,
         )
 
     elif action.type == "CLOSE":

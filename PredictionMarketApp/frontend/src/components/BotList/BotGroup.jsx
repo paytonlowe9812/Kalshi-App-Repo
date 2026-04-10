@@ -55,7 +55,7 @@ export default function BotGroup({
             checked={groupAllSelected}
             disabled={groupBotIds.length === 0}
             onChange={() => onToggleSelectGroup?.(group)}
-            className="w-3.5 h-3.5 border-terminal-border-dim rounded-sm disabled:opacity-30"
+            className="registry-checkbox w-3.5 h-3.5 border border-terminal-amber bg-terminal-bg rounded-sm disabled:opacity-30"
             style={{ accentColor: '#D4A017' }}
             aria-label={`Select all bots in folder ${group.name}`}
           />

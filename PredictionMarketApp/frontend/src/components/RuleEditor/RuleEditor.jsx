@@ -20,7 +20,7 @@ export default function RuleEditor({ onOpenSimulator }) {
   const [rules, setRules] = useState([]);
   const [editingName, setEditingName] = useState(false);
   const [botName, setBotName] = useState('');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [simResults, setSimResults] = useState({});
   const saveTimeout = useRef(null);
 
@@ -144,22 +144,25 @@ export default function RuleEditor({ onOpenSimulator }) {
     <div className="h-full flex">
       <div className="flex-1 flex flex-col min-w-0">
         {isBulk && (
-          <div className="flex items-center gap-2 px-2.5 py-1.5 bg-terminal-amber-faint border-b border-terminal-amber text-terminal-amber-bright text-[10px] font-mono">
-            <div className="flex-1 min-w-0">
-              <span className="font-bold">BULK EDIT</span>
-              <span className="text-terminal-amber mx-1">—</span>
-              <span>{bulkEditIds.length} bots selected. Edit here, then save to all.</span>
+          <div className="border-b border-terminal-amber bg-terminal-amber-faint">
+            <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-16 py-1.5 flex items-center gap-2 text-terminal-amber-bright text-[10px] font-mono">
+              <div className="flex-1 min-w-0">
+                <span className="font-bold">BULK EDIT</span>
+                <span className="text-terminal-amber mx-1">—</span>
+                <span>{bulkEditIds.length} bots selected. Edit here, then save to all.</span>
+              </div>
+              <button
+                onClick={saveBulkAll}
+                disabled={bulkSaving}
+                className="shrink-0 px-2.5 py-1 border border-terminal-amber text-terminal-amber-bright hover:bg-terminal-amber hover:text-terminal-bg font-mono text-[10px] font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {bulkSaving ? 'SAVING...' : bulkSaved ? 'SAVED ✓' : `SAVE TO ALL ${bulkEditIds.length}`}
+              </button>
             </div>
-            <button
-              onClick={saveBulkAll}
-              disabled={bulkSaving}
-              className="shrink-0 px-2.5 py-1 border border-terminal-amber text-terminal-amber-bright hover:bg-terminal-amber hover:text-terminal-bg font-mono text-[10px] font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {bulkSaving ? 'SAVING...' : bulkSaved ? 'SAVED ✓' : `SAVE TO ALL ${bulkEditIds.length}`}
-            </button>
           </div>
         )}
-        <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 px-2 md:px-2.5 py-1.5 md:py-2 border-b border-terminal-border-dim">
+        <div className="border-b border-terminal-border-dim">
+          <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-16 flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 py-1.5 md:py-2">
           <div className="flex items-center gap-1 min-w-0 flex-wrap">
             {editingName ? (
               <input type="text" value={botName} onChange={(e) => setBotName(e.target.value)} onBlur={saveBotName} onKeyDown={(e) => e.key === 'Enter' && saveBotName()} className="input-field text-xs font-semibold flex-1 min-w-[120px]" autoFocus />
@@ -237,18 +240,19 @@ export default function RuleEditor({ onOpenSimulator }) {
               </div>
             )}
           </div>
+          </div>
         </div>
-        <RuleToolbar onAddLine={addLine} onSimulate={onOpenSimulator} />
+        <RuleToolbar onAddLine={addLine} onSimulate={onOpenSimulator} onOpenHistory={() => setHistoryOpen(true)} />
         <div className="flex-1 overflow-y-auto">
-          {rules.length === 0 && <div className="flex items-center justify-center h-32 text-xs text-terminal-amber-dim font-mono px-4 text-center">ADD RULE LINES USING THE TOOLBAR ABOVE</div>}
-          {rules.map((rule, i) => (
-            <RuleLine key={`${rule.line_type}-${i}`} rule={{ ...rule, line_number: i + 1 }} index={i} onUpdate={(u) => updateRule(i, u)} onMoveUp={() => moveUp(i)} onMoveDown={() => moveDown(i)} onDelete={() => deleteLine(i)} simResult={simResults[i + 1]} isFirst={i === 0} isLast={i === rules.length - 1} />
-          ))}
+          <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-16 py-1">
+            {rules.length === 0 && <div className="flex items-center justify-center h-32 text-xs text-terminal-amber-dim font-mono px-4 text-center">ADD RULE LINES USING THE TOOLBAR ABOVE</div>}
+            {rules.map((rule, i) => (
+              <RuleLine key={`${rule.line_type}-${i}`} rule={{ ...rule, line_number: i + 1 }} index={i} onUpdate={(u) => updateRule(i, u)} onMoveUp={() => moveUp(i)} onMoveDown={() => moveDown(i)} onDelete={() => deleteLine(i)} simResult={simResults[i + 1]} isFirst={i === 0} isLast={i === rules.length - 1} />
+            ))}
+          </div>
         </div>
       </div>
-      <div className="hidden md:block">
-        <SnapshotSidebar botId={activeBotId} onRestore={fetchBot} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      </div>
+      <SnapshotSidebar botId={activeBotId} onRestore={fetchBot} open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </div>
   );
 }

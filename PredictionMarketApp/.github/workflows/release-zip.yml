@@ -1,0 +1,38 @@
+# Publishes a source ZIP on each version tag (e.g. v1.0.0).
+# The archive contains tracked files only (same as git clone), including README.md.
+# Create a release: git tag v1.0.0 && git push origin v1.0.0
+
+name: Release source ZIP
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  attach-zip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create ZIP from repository tree
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          OUT="PredictionMarketApp-${VERSION}.zip"
+          git archive --format=zip --output="${OUT}" HEAD
+          # Stable filename so this URL always works: .../releases/latest/download/PredictionMarketApp.zip
+          cp "${OUT}" PredictionMarketApp.zip
+          ls -la "${OUT}" PredictionMarketApp.zip
+
+      # Pinned to v2.6.1 commit (supply chain); update via: api.github.com/repos/softprops/action-gh-release/git/refs/tags/v2.6.1
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe
+        with:
+          files: |
+            PredictionMarketApp.zip
+            PredictionMarketApp-*.zip
+          generate_release_notes: true

@@ -142,12 +142,15 @@ class BulkBotEdit(BaseModel):
 class Action(BaseModel):
     type: str
     contracts: Optional[int] = None
+    contracts_var: Optional[str] = None
     price: Optional[float] = None
+    price_var: Optional[str] = None
     side: Optional[str] = None
     var_name: Optional[str] = None
     value: Optional[str] = None
     message: Optional[str] = None
     line: Optional[int] = None
+    line_var: Optional[str] = None
     fired_line: Optional[int] = None
 
 

@@ -20,7 +20,7 @@ export default function BotRow({ bot, onSelect, onStart, onStop, onCopy, onDelet
             type="checkbox"
             checked={!!selected}
             onChange={() => onToggleSelect?.(bot.id)}
-            className="w-3.5 h-3.5 border-terminal-border-dim rounded-sm"
+            className="registry-checkbox w-3.5 h-3.5 border border-terminal-amber bg-terminal-bg rounded-sm"
             style={{ accentColor: '#D4A017' }}
             aria-label={`Select ${bot.name}`}
           />
@@ -59,7 +59,7 @@ export default function BotRow({ bot, onSelect, onStart, onStop, onCopy, onDelet
             type="checkbox"
             checked={!!selected}
             onChange={() => onToggleSelect?.(bot.id)}
-            className="w-4 h-4 border-terminal-border-dim rounded-sm"
+            className="registry-checkbox w-4 h-4 border border-terminal-amber bg-terminal-bg rounded-sm"
             style={{ accentColor: '#D4A017' }}
             aria-label={`Select ${bot.name}`}
           />
