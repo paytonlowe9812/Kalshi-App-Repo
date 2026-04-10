@@ -12,7 +12,8 @@ function inferSeriesFromMarket(ticker) {
 }
 
 export default function RuleEditor({ onOpenSimulator }) {
-  const { activeBotId } = useAppStore();
+  const { activeBotId, bulkEditIds } = useAppStore();
+  const isBulk = bulkEditIds.length > 1;
   const [bot, setBot] = useState(null);
   const [rules, setRules] = useState([]);
   const [editingName, setEditingName] = useState(false);
@@ -49,12 +50,15 @@ export default function RuleEditor({ onOpenSimulator }) {
         action_params: r.action_params || null, group_id: r.group_id || null,
         group_logic: r.group_logic || null,
       }));
-      await fetch(`/api/bots/${activeBotId}/rules`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rules: payload }),
-      });
+      const targets = bulkEditIds.length > 1 ? bulkEditIds : [activeBotId];
+      await Promise.all(targets.map((id) =>
+        fetch(`/api/bots/${id}/rules`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rules: payload }),
+        })
+      ));
     }, 800);
-  }, [activeBotId]);
+  }, [activeBotId, bulkEditIds]);
 
   const updateRule = (index, updatedRule) => { const n = [...rules]; n[index] = updatedRule; setRules(n); saveRules(n); };
   const addLine = (lineType) => {
@@ -78,23 +82,29 @@ export default function RuleEditor({ onOpenSimulator }) {
 
   const setContractSide = async (side) => {
     const s = side === 'no' ? 'no' : 'yes';
-    await fetch(`/api/bots/${activeBotId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contract_side: s }),
-    });
+    const targets = bulkEditIds.length > 1 ? bulkEditIds : [activeBotId];
+    await Promise.all(targets.map((id) =>
+      fetch(`/api/bots/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contract_side: s }),
+      })
+    ));
     fetchBot();
   };
 
   const toggleAutoRoll = async () => {
-    await fetch(`/api/bots/${activeBotId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        auto_roll: !bot?.auto_roll,
-        ...(effectiveSeries ? { series_ticker: effectiveSeries } : {}),
-      }),
-    });
+    const targets = bulkEditIds.length > 1 ? bulkEditIds : [activeBotId];
+    await Promise.all(targets.map((id) =>
+      fetch(`/api/bots/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auto_roll: !bot?.auto_roll,
+          ...(effectiveSeries ? { series_ticker: effectiveSeries } : {}),
+        }),
+      })
+    ));
     fetchBot();
   };
 
@@ -112,6 +122,13 @@ export default function RuleEditor({ onOpenSimulator }) {
   return (
     <div className="h-full flex">
       <div className="flex-1 flex flex-col min-w-0">
+        {isBulk && (
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-terminal-amber-faint border-b border-terminal-amber text-terminal-amber-bright text-[10px] font-mono">
+            <span className="font-bold">BULK EDIT</span>
+            <span className="text-terminal-amber">—</span>
+            <span>{bulkEditIds.length} bots selected. Rules, contract side &amp; auto-roll apply to all. Name and market are per-bot.</span>
+          </div>
+        )}
         <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 px-2 md:px-2.5 py-1.5 md:py-2 border-b border-terminal-border-dim">
           <div className="flex items-center gap-1 min-w-0 flex-wrap">
             {editingName ? (

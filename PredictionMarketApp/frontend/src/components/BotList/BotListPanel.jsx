@@ -7,7 +7,7 @@ import ConfirmDialog from '../shared/ConfirmDialog';
 import Modal from '../shared/Modal';
 
 export default function BotListPanel() {
-  const { setActiveBotId, setActiveTab } = useAppStore();
+  const { setActiveBotId, setActiveTab, setBulkEditIds } = useAppStore();
   const { groups, ungroupedBots, fetchBots, loading } = useBotStore();
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteGroup, setConfirmDeleteGroup] = useState(null);
@@ -60,9 +60,10 @@ export default function BotListPanel() {
   const bulkEditFirst = useCallback(() => {
     const id = selectedIds[0];
     if (id == null) return;
+    setBulkEditIds(selectedIds.length > 1 ? [...selectedIds] : []);
     setActiveBotId(id);
     setActiveTab('editor');
-  }, [selectedIds, setActiveBotId, setActiveTab]);
+  }, [selectedIds, setActiveBotId, setActiveTab, setBulkEditIds]);
 
   const bulkStartSelected = useCallback(async () => {
     if (selectedIds.length === 0) return;
@@ -107,7 +108,7 @@ export default function BotListPanel() {
 
   useEffect(() => { fetchBots(); }, []);
 
-  const selectBot = (bot) => { setActiveBotId(bot.id); setActiveTab('editor'); };
+  const selectBot = (bot) => { setBulkEditIds([]); setActiveBotId(bot.id); setActiveTab('editor'); };
   const startBot = async (id) => { await fetch(`/api/bots/${id}/start`, { method: 'POST' }); fetchBots(); };
   const stopBot = async (id) => { await fetch(`/api/bots/${id}/stop`, { method: 'POST' }); fetchBots(); };
   const copyBot = async (id) => { await fetch(`/api/bots/${id}/copy`, { method: 'POST' }); fetchBots(); };

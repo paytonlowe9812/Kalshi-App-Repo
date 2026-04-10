@@ -20,6 +20,7 @@ const useAppStore = create((set) => ({
   panicActive: false,
   activeIndexId: null,
   activeBotId: null,
+  bulkEditIds: [],
   firstLaunch: false,
   indexQuoteMode: typeof localStorage !== 'undefined' ? readStoredQuoteMode() : 'odds',
 
@@ -37,6 +38,7 @@ const useAppStore = create((set) => ({
   setPanicActive: (active) => set({ panicActive: active }),
   setActiveIndexId: (id) => set({ activeIndexId: id }),
   setActiveBotId: (id) => set({ activeBotId: id }),
+  setBulkEditIds: (ids) => set({ bulkEditIds: ids }),
   setFirstLaunch: (val) => set({ firstLaunch: val }),
   setIndexQuoteMode: (mode) => {
     try {

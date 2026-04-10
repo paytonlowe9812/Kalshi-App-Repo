@@ -17,7 +17,16 @@ export default function BotGroup({
   onToggleSelect,
   onToggleSelectGroup,
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const storageKey = `botgroup-expanded-${group.id}`;
+  const [expanded, setExpanded] = useState(() => {
+    const saved = localStorage.getItem(storageKey);
+    return saved === null ? true : saved === 'true';
+  });
+
+  const toggleExpanded = (next) => {
+    setExpanded(next);
+    localStorage.setItem(storageKey, String(next));
+  };
   const groupCheckboxRef = useRef(null);
 
   const groupBotIds = useMemo(() => (group.bots || []).map((b) => b.id), [group.bots]);
@@ -33,7 +42,7 @@ export default function BotGroup({
     <div className="border-b border-terminal-border-dim">
       <div
         className="flex items-center gap-1 px-2 py-1.5 bg-terminal-panel cursor-pointer hover:bg-terminal-amber-faint active:bg-terminal-amber-faint transition-colors"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => toggleExpanded(!expanded)}
       >
         <label
           className="flex items-center justify-center w-5 shrink-0 cursor-pointer md:w-5 min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 -ml-1 md:ml-0"

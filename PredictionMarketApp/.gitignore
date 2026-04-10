@@ -1,6 +1,8 @@
 # SQLite stores API keys (PEM), key IDs, bots, rules, and logs -- do not commit or share
-data/app.db
 data/*.db
+data/*.db-shm
+data/*.db-wal
+data/*.db-journal
 
 # Python virtual environment
 .venv/
