@@ -33,7 +33,6 @@ def _bot_dict(row) -> dict:
         "trigger_value": row["trigger_value"],
         "trigger_time": row["trigger_time"],
         "status": row["status"],
-        "is_paper": bool(row["is_paper"]),
         "error_message": row["error_message"],
         "last_run_at": row["last_run_at"],
         "run_count": row["run_count"],
@@ -102,7 +101,7 @@ def create_bot(data: BotCreate):
             data.trigger_type,
             data.trigger_value,
             data.trigger_time,
-            int(data.is_paper),
+            0,
             int(auto_roll),
             series,
             cs,
@@ -139,8 +138,27 @@ def get_available_variables(id: int):
     groups.append({
         "label": "PORTFOLIO",
         "vars": [
-            {"name": "PositionSize", "desc": "Contracts held in this market"},
-            {"name": "DailyPnL",     "desc": "Today's realised P&L"},
+            {
+                "name": "PositionSize",
+                "desc": "This bot's market only: Kalshi net position (signed YES contracts; negative means NO exposure)",
+            },
+            {
+                "name": "AbsPositionSize",
+                "desc": "This bot's market only: |PositionSize| (contracts magnitude)",
+            },
+            {
+                "name": "HasPosition",
+                "desc": "This bot's market only: 1 if any open position on this ticker, else 0",
+            },
+            {
+                "name": "RestingLimitCount",
+                "desc": "Resting limit orders on this bot's market (Kalshi API)",
+            },
+            {
+                "name": "OldestRestingLimitAgeSec",
+                "desc": "Seconds since created_time of the oldest resting limit on this market (0 if none)",
+            },
+            {"name": "DailyPnL", "desc": "Today's realised P&L (trade log, all bots)"},
         ],
     })
 
@@ -240,9 +258,6 @@ def update_bot(id: int, data: BotUpdate):
         if val is not None:
             updates.append(f"{field} = ?")
             params.append(val)
-    if data.is_paper is not None:
-        updates.append("is_paper = ?")
-        params.append(int(data.is_paper))
     if data.auto_roll is not None:
         updates.append("auto_roll = ?")
         params.append(int(data.auto_roll))
@@ -320,7 +335,7 @@ def copy_bot(id: int):
             row["trigger_type"],
             row["trigger_value"],
             row["trigger_time"],
-            row["is_paper"],
+            0,
             row["auto_roll"],
             row["series_ticker"],
         ),

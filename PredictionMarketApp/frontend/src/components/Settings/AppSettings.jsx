@@ -7,7 +7,7 @@ export default function AppSettings({ settings, onUpdate }) {
   const s = settings || {};
   const toggleTheme = () => { const next = theme === 'dark' ? 'light' : 'dark'; setTheme(next); onUpdate('theme', next); };
   const exportBots = async () => { const res = await fetch('/api/bots'); const bots = await res.json(); const blob = new Blob([JSON.stringify(bots, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'bots_backup.json'; a.click(); URL.revokeObjectURL(url); };
-  const importBots = (e) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = async (ev) => { try { const bots = JSON.parse(ev.target.result); for (const bot of bots) { await fetch('/api/bots', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: bot.name, market_ticker: bot.market_ticker, is_paper: bot.is_paper }) }); } } catch {} }; reader.readAsText(file); };
+  const importBots = (e) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = async (ev) => { try { const bots = JSON.parse(ev.target.result); for (const bot of bots) { await fetch('/api/bots', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: bot.name, market_ticker: bot.market_ticker }) }); } } catch {} }; reader.readAsText(file); };
   return (
     <div className="card space-y-4 font-mono">
       <h3 className="panel-header">APP CONFIG</h3>

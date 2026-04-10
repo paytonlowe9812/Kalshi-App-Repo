@@ -12,6 +12,9 @@ const TYPE_COLORS = {
   CONTINUE: 'bg-terminal-green/20 text-terminal-green-text border-terminal-green-bright/30',
   STOP: 'bg-terminal-red/20 text-terminal-red-text border-terminal-red/30',
   LOG: 'bg-terminal-panel text-terminal-amber-dim border-terminal-border-dim',
+  NOOP: 'bg-terminal-panel text-terminal-amber-dim border-terminal-border-dim',
+  PAUSE: 'bg-terminal-amber-faint/50 text-terminal-amber border-terminal-amber-dim/30',
+  CANCEL_STALE: 'bg-terminal-red/15 text-terminal-red-text border-terminal-red/25',
   SET_VAR: 'bg-terminal-amber-faint/50 text-terminal-amber border-terminal-amber-dim/30',
   ALERT: 'bg-terminal-amber-faint/50 text-terminal-amber border-terminal-amber/30',
 };
@@ -20,7 +23,7 @@ export default function RuleLine({ rule, index, onUpdate, onMoveUp, onMoveDown, 
   const typeColor = TYPE_COLORS[rule.line_type] || TYPE_COLORS.LOG;
   const isCondition = ['IF', 'AND', 'OR'].includes(rule.line_type);
   const isAction = ['THEN', 'ELSE'].includes(rule.line_type);
-  const isStandalone = ['GOTO', 'STOP', 'CONTINUE', 'LOG', 'SET_VAR', 'ALERT'].includes(rule.line_type);
+  const isStandalone = ['GOTO', 'STOP', 'CONTINUE', 'LOG', 'NOOP', 'PAUSE', 'CANCEL_STALE', 'SET_VAR', 'ALERT'].includes(rule.line_type);
 
   return (
     <div className={`px-1.5 md:px-2 py-2 md:py-1.5 border-b border-terminal-border-dim/30 hover:bg-terminal-amber-faint/30 active:bg-terminal-amber-faint/50 group transition-colors ${

@@ -71,8 +71,9 @@ export default function TradeLog() {
             <option value="BUY">BUY</option>
             <option value="SELL">SELL</option>
             <option value="CLOSE">CLOSE</option>
-            <option value="PAPER_BUY">PAPER BUY</option>
-            <option value="PAPER_SELL">PAPER SELL</option>
+            <option value="LIMIT_YES">LIMIT YES</option>
+            <option value="LIMIT_NO">LIMIT NO</option>
+            <option value="CANCEL_STALE">CANCEL STALE</option>
           </select>
           <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input-field text-xs md:text-sm flex-shrink-0" />
           <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input-field text-xs md:text-sm flex-shrink-0" />

@@ -3,7 +3,7 @@ import useAppStore from '../store/useAppStore';
 
 export function useLicense() {
   const { setLicenseValid } = useAppStore();
-  const [status, setStatus] = useState({ valid: false, mode: 'paper' });
+  const [status, setStatus] = useState({ valid: false, mode: 'locked' });
 
   useEffect(() => {
     const fetchStatus = async () => {

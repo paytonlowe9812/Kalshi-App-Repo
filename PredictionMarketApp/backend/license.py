@@ -46,12 +46,7 @@ def get_license_status() -> dict:
     ).fetchone()
     valid = valid_row and valid_row[0] == "true"
 
-    paper_row = db.execute(
-        "SELECT value FROM settings WHERE key = 'paper_trading_mode'"
-    ).fetchone()
-    paper = paper_row and paper_row[0] == "true"
-
-    mode = "paper" if (paper or not valid) else "live"
+    mode = "live" if valid else "locked"
     return {"valid": valid, "mode": mode}
 
 

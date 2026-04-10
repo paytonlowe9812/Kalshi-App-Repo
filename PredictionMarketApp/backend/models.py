@@ -15,7 +15,6 @@ class ApiKeyCreate(BaseModel):
     name: str
     key_id: str
     key_secret: str
-    is_demo: bool = False
 
 
 class ApiKeyUpdate(BaseModel):
@@ -40,7 +39,6 @@ class BotCreate(BaseModel):
     trigger_type: str = "loop"
     trigger_value: Optional[str] = None
     trigger_time: Optional[str] = None
-    is_paper: bool = True
     auto_roll: bool = False
     series_ticker: Optional[str] = None
     contract_side: Optional[str] = "yes"
@@ -53,7 +51,6 @@ class BotUpdate(BaseModel):
     trigger_type: Optional[str] = None
     trigger_value: Optional[str] = None
     trigger_time: Optional[str] = None
-    is_paper: Optional[bool] = None
     auto_roll: Optional[bool] = None
     series_ticker: Optional[str] = None
     contract_side: Optional[str] = None
@@ -134,7 +131,6 @@ class VariableUpdate(BaseModel):
 
 
 class BulkBotEdit(BaseModel):
-    is_paper: Optional[bool] = None
     trigger_type: Optional[str] = None
     market_ticker: Optional[str] = None
 
@@ -151,6 +147,12 @@ class Action(BaseModel):
     message: Optional[str] = None
     line: Optional[int] = None
     line_var: Optional[str] = None
+    # PAUSE: duration in milliseconds (literal or ms_var).
+    ms: Optional[int] = None
+    ms_var: Optional[str] = None
+    # CANCEL_STALE: cancel resting limit orders older than this many ms.
+    max_age_ms: Optional[int] = None
+    max_age_ms_var: Optional[str] = None
     fired_line: Optional[int] = None
 
 

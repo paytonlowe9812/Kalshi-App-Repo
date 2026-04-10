@@ -43,7 +43,7 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function App() {
-  const { activeTab, setActiveTab, setFirstLaunch, setPaperMode, setTheme } = useAppStore();
+  const { activeTab, setActiveTab, setFirstLaunch, setTheme } = useAppStore();
   const [simulatorOpen, setSimulatorOpen] = useState(false);
 
   useEffect(() => {
@@ -59,7 +59,6 @@ export default function App() {
         const settingsRes = await fetch('/api/settings');
         const settings = await settingsRes.json();
         if (settings.theme) setTheme(settings.theme);
-        if (settings.paper_trading_mode) setPaperMode(settings.paper_trading_mode === 'true');
       } catch {
         /* server not ready */
       }

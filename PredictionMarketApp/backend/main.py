@@ -43,16 +43,12 @@ async def lifespan(app: FastAPI):
 
     db = get_db()
     active_key = db.execute(
-        "SELECT key_id, key_secret, is_demo FROM api_keys WHERE is_active = 1 LIMIT 1"
+        "SELECT key_id, key_secret FROM api_keys WHERE is_active = 1 LIMIT 1"
     ).fetchone()
     if active_key:
-        client = KalshiClient(
-            active_key["key_id"], active_key["key_secret"], bool(active_key["is_demo"])
-        )
+        client = KalshiClient(active_key["key_id"], active_key["key_secret"])
         set_kalshi_client(client)
-        ws_manager.configure(
-            active_key["key_id"], active_key["key_secret"], bool(active_key["is_demo"])
-        )
+        ws_manager.configure(active_key["key_id"], active_key["key_secret"])
         await ws_manager.start()
         tickers = get_all_tickers()
         if tickers:

@@ -2,6 +2,7 @@ import httpx
 import time
 import base64
 import logging
+from datetime import datetime, timezone
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -12,7 +13,22 @@ from cryptography.hazmat.backends import default_backend
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.elections.kalshi.com/trade-api/v2"
-DEMO_URL = "https://demo-api.kalshi.co/trade-api/v2"
+
+
+def kalshi_iso_to_unix(s: str | None) -> float | None:
+    """Parse Kalshi API date-time string to UTC unix seconds."""
+    if not s or not isinstance(s, str):
+        return None
+    try:
+        t = s.strip()
+        if t.endswith("Z"):
+            t = t[:-1] + "+00:00"
+        dt = datetime.fromisoformat(t)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.timestamp()
+    except ValueError:
+        return None
 
 
 def _normalize_pem(pem_text: str) -> str:
@@ -39,10 +55,10 @@ def _load_rsa_key(pem_text: str):
 
 
 class KalshiClient:
-    def __init__(self, key_id: str, private_key_pem: str, demo: bool = False):
+    def __init__(self, key_id: str, private_key_pem: str):
         self.key_id = key_id
         self._private_key_pem = private_key_pem
-        self.base_url = DEMO_URL if demo else BASE_URL
+        self.base_url = BASE_URL
         self._client: Optional[httpx.AsyncClient] = None
         self._rsa_key = None
         try:
@@ -243,6 +259,26 @@ class KalshiClient:
         if price is not None:
             body["yes_price"] = price
         return await self._request("POST", "/portfolio/orders", json=body)
+
+    async def get_orders(
+        self,
+        *,
+        ticker: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 100,
+        cursor: Optional[str] = None,
+    ) -> dict:
+        params: dict = {"limit": limit}
+        if ticker:
+            params["ticker"] = ticker
+        if status:
+            params["status"] = status
+        if cursor:
+            params["cursor"] = cursor
+        return await self._request("GET", "/portfolio/orders", params=params)
+
+    async def cancel_order(self, order_id: str) -> dict:
+        return await self._request("DELETE", f"/portfolio/orders/{order_id}")
 
     async def get_positions(self) -> dict:
         return await self._request("GET", "/portfolio/positions")

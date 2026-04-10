@@ -8,12 +8,12 @@ import AppSettings from './AppSettings';
 import ConfirmDialog from '../shared/ConfirmDialog';
 
 export default function SettingsScreen() {
-  const { firstLaunch, setPaperMode } = useAppStore();
+  const { firstLaunch } = useAppStore();
   const [settings, setSettings] = useState({});
   const [showPanic, setShowPanic] = useState(false);
   const [dirty, setDirty] = useState(false);
-  useEffect(() => { const f = async () => { const res = await fetch('/api/settings'); const data = await res.json(); setSettings(data); setPaperMode(data.paper_trading_mode === 'true'); }; f(); }, []);
-  const updateSetting = (key, value) => { setSettings((p) => ({ ...p, [key]: value })); setDirty(true); if (key === 'paper_trading_mode') setPaperMode(value === 'true'); };
+  useEffect(() => { const f = async () => { const res = await fetch('/api/settings'); const data = await res.json(); setSettings(data); }; f(); }, []);
+  const updateSetting = (key, value) => { setSettings((p) => ({ ...p, [key]: value })); setDirty(true); };
   const saveAll = async () => { await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ settings }) }); setDirty(false); };
   const handlePanic = async () => { await fetch('/api/settings/panic', { method: 'POST' }); };
   return (

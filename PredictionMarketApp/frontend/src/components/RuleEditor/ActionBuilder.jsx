@@ -25,6 +25,8 @@ function VarOrNumeric({
   step,
   inputClass = 'input-field w-16 text-xs py-0.5',
   ariaLabel,
+  /** Short label before value/var (e.g. Qty, Price) */
+  fieldLabel,
   groups,
   loading,
   onUpdateParams,
@@ -48,7 +50,16 @@ function VarOrNumeric({
   };
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap">
+      {fieldLabel ? (
+        <span
+          className="text-[9px] font-mono uppercase tracking-wide text-terminal-amber-dim shrink-0 select-none"
+          title={ariaLabel || fieldLabel}
+        >
+          {fieldLabel}
+        </span>
+      ) : null}
+      <div className="flex items-center gap-1 min-w-0">
       <div
         className="flex border border-terminal-border-dim rounded-sm overflow-hidden shrink-0"
         role="group"
@@ -122,6 +133,7 @@ function VarOrNumeric({
           }}
         />
       )}
+      </div>
     </div>
   );
 }
@@ -143,7 +155,7 @@ export default function ActionBuilder({ rule, onUpdate }) {
       return (
         <div className="flex flex-wrap items-center gap-1 text-xs font-mono">
           <span className="text-terminal-green-text font-semibold">BUY</span>
-          <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} ariaLabel="Contract count" {...varProps} />
+          <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} fieldLabel="Qty" ariaLabel="Contract count" {...varProps} />
           <span className="text-terminal-amber-dim">contracts at market</span>
         </div>
       );
@@ -152,7 +164,7 @@ export default function ActionBuilder({ rule, onUpdate }) {
       return (
         <div className="flex flex-wrap items-center gap-1 text-xs font-mono">
           <span className="text-terminal-red-text font-semibold">SELL</span>
-          <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} ariaLabel="Contract count" {...varProps} />
+          <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} fieldLabel="Qty" ariaLabel="Contract count" {...varProps} />
           <span className="text-terminal-amber-dim">contracts at market</span>
         </div>
       );
@@ -169,9 +181,9 @@ export default function ActionBuilder({ rule, onUpdate }) {
             <option value="yes">BUY</option>
             <option value="no">SELL</option>
           </select>
-          <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} ariaLabel="Contract count" {...varProps} />
+          <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} fieldLabel="Qty" ariaLabel="Contract count" {...varProps} />
           <span className="text-terminal-amber-dim">at</span>
-          <VarOrNumeric params={params} paramKey="price" varKey="price_var" fallback={50} isFloat step={1} inputClass="input-field w-14 text-xs py-0.5" ariaLabel="Limit price" {...varProps} />
+          <VarOrNumeric params={params} paramKey="price" varKey="price_var" fallback={50} isFloat step={1} inputClass="input-field w-14 text-xs py-0.5" fieldLabel="Price" ariaLabel="Limit price (cents)" {...varProps} />
           <span className="text-terminal-amber-dim">cents</span>
         </div>
       );
@@ -212,7 +224,49 @@ export default function ActionBuilder({ rule, onUpdate }) {
       return (
         <div className="flex flex-wrap items-center gap-1 text-xs font-mono">
           <span className="text-terminal-amber font-semibold">GO TO LINE</span>
-          <VarOrNumeric params={params} paramKey="line" varKey="line_var" fallback={1} min={1} ariaLabel="Go to line number" {...varProps} />
+          <VarOrNumeric params={params} paramKey="line" varKey="line_var" fallback={1} min={1} fieldLabel="Line" ariaLabel="Go to line number" {...varProps} />
+        </div>
+      );
+
+    case 'NOOP':
+      return <span className="text-xs text-terminal-amber-dim font-mono font-semibold">NO OP</span>;
+
+    case 'PAUSE':
+      return (
+        <div className="flex flex-wrap items-center gap-1 text-xs font-mono">
+          <span className="text-terminal-amber font-semibold">PAUSE</span>
+          <VarOrNumeric
+            params={params}
+            paramKey="ms"
+            varKey="ms_var"
+            fallback={500}
+            min={0}
+            step={1}
+            inputClass="input-field w-20 text-xs py-0.5"
+            fieldLabel="Ms"
+            ariaLabel="Pause duration in milliseconds"
+            {...varProps}
+          />
+        </div>
+      );
+
+    case 'CANCEL_STALE':
+      return (
+        <div className="flex flex-wrap items-center gap-1 text-xs font-mono">
+          <span className="text-terminal-red-text font-semibold">CXL STALE</span>
+          <VarOrNumeric
+            params={params}
+            paramKey="max_age_ms"
+            varKey="max_age_ms_var"
+            fallback={60000}
+            min={0}
+            step={1000}
+            inputClass="input-field w-24 text-xs py-0.5"
+            fieldLabel="Max ms"
+            ariaLabel="Cancel resting limits at least this old (ms)"
+            {...varProps}
+          />
+          <span className="text-terminal-amber-dim">rest limit</span>
         </div>
       );
 
@@ -221,7 +275,18 @@ export default function ActionBuilder({ rule, onUpdate }) {
 
     default:
       return (
-        <select value={actionType} onChange={(e) => onUpdate({ ...rule, action_type: e.target.value })} className="input-field text-xs py-0.5">
+        <select
+          value={actionType}
+          onChange={(e) => {
+            const v = e.target.value;
+            let next = { ...rule, action_type: v };
+            if (v === 'PAUSE') next = { ...next, action_params: JSON.stringify({ ms: 500 }) };
+            if (v === 'NOOP') next = { ...next, action_params: JSON.stringify({}) };
+            if (v === 'CANCEL_STALE') next = { ...next, action_params: JSON.stringify({ max_age_ms: 60000 }) };
+            onUpdate(next);
+          }}
+          className="input-field text-xs py-0.5"
+        >
           <option value="">Select action...</option>
           <option value="BUY">BUY</option>
           <option value="SELL">SELL</option>
@@ -231,6 +296,9 @@ export default function ActionBuilder({ rule, onUpdate }) {
           <option value="STOP">STOP</option>
           <option value="LOG">LOG</option>
           <option value="ALERT">ALERT</option>
+          <option value="NOOP">NO OP</option>
+          <option value="PAUSE">PAUSE</option>
+          <option value="CANCEL_STALE">CANCEL STALE LIMITS</option>
           <option value="GOTO">GOTO</option>
           <option value="CONTINUE">CONTINUE</option>
         </select>

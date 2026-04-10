@@ -5,7 +5,7 @@ import StatusDot from '../shared/StatusDot';
 export default function ApiKeyManager({ firstLaunch }) {
   const [keys, setKeys] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
-  const [newKey, setNewKey] = useState({ name: '', key_id: '', key_secret: '', is_demo: false });
+  const [newKey, setNewKey] = useState({ name: '', key_id: '', key_secret: '' });
   const [testResults, setTestResults] = useState({});
   const [saveError, setSaveError] = useState('');
 
@@ -43,7 +43,7 @@ export default function ApiKeyManager({ firstLaunch }) {
       return;
     }
     setShowAdd(false);
-    setNewKey({ name: '', key_id: '', key_secret: '', is_demo: false });
+    setNewKey({ name: '', key_id: '', key_secret: '' });
     fetchKeys();
   };
 
@@ -66,6 +66,9 @@ export default function ApiKeyManager({ firstLaunch }) {
   return (
     <div className="card font-mono">
       <h3 className="panel-header mb-3">API KEY MANAGEMENT</h3>
+      <p className="text-[10px] text-terminal-amber-dim mb-3 leading-relaxed max-w-xl">
+        Production Kalshi only (api.elections.kalshi.com). Use your live API credentials.
+      </p>
 
       {firstLaunch && (
         <div className="bg-terminal-amber-faint border border-terminal-amber/30 p-3 mb-4 text-sm text-terminal-amber-bright">
@@ -78,7 +81,6 @@ export default function ApiKeyManager({ firstLaunch }) {
         <thead>
           <tr className="text-[10px] text-terminal-amber-dim uppercase tracking-wider">
             <th className="text-left py-2">NAME</th>
-            <th className="text-left py-2">ENVIRONMENT</th>
             <th className="text-left py-2">LAST USED</th>
             <th className="text-left py-2">ACTIVE</th>
             <th className="text-right py-2">ACTIONS</th>
@@ -88,11 +90,6 @@ export default function ApiKeyManager({ firstLaunch }) {
           {keys.map((k) => (
             <tr key={k.id} className="border-t border-terminal-border-dim/50">
               <td className="py-2 text-terminal-amber">{k.name}</td>
-              <td className="py-2">
-                <span className={`badge ${k.is_demo ? 'bg-terminal-amber-faint text-terminal-amber' : 'bg-terminal-green/20 text-terminal-green-text'}`}>
-                  {k.is_demo ? 'DEMO' : 'LIVE'}
-                </span>
-              </td>
               <td className="py-2 text-terminal-amber-dim text-xs">
                 {k.last_used ? new Date(k.last_used).toLocaleDateString() : 'NEVER'}
               </td>
@@ -116,7 +113,7 @@ export default function ApiKeyManager({ firstLaunch }) {
             </tr>
           ))}
           {keys.length === 0 && (
-            <tr><td colSpan={5} className="py-4 text-center text-terminal-amber-dim text-xs">NO API KEYS SAVED</td></tr>
+            <tr><td colSpan={4} className="py-4 text-center text-terminal-amber-dim text-xs">NO API KEYS SAVED</td></tr>
           )}
         </tbody>
       </table>
@@ -125,14 +122,11 @@ export default function ApiKeyManager({ firstLaunch }) {
       <div className="md:hidden space-y-2">
         {keys.map((k) => (
           <div key={k.id} className="bg-terminal-panel border border-terminal-border-dim/50 p-3 space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 {k.is_active ? <StatusDot status="running" /> : <StatusDot status="stopped" />}
                 <span className="text-sm font-medium text-terminal-amber">{k.name}</span>
               </div>
-              <span className={`badge text-[10px] ${k.is_demo ? 'bg-terminal-amber-faint text-terminal-amber' : 'bg-terminal-green/20 text-terminal-green-text'}`}>
-                {k.is_demo ? 'DEMO' : 'LIVE'}
-              </span>
             </div>
             <div className="text-[10px] text-terminal-amber-dim">
               LAST USED: {k.last_used ? new Date(k.last_used).toLocaleDateString() : 'NEVER'}
@@ -206,10 +200,6 @@ export default function ApiKeyManager({ firstLaunch }) {
               placeholder={"-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"}
             />
           </div>
-          <label className="flex items-center gap-2 min-h-[44px]">
-            <input type="checkbox" className="w-5 h-5 border-terminal-border-dim" style={{ accentColor: '#D4A017' }} checked={newKey.is_demo} onChange={(e) => setNewKey({ ...newKey, is_demo: e.target.checked })} />
-            <span className="text-xs text-terminal-amber-dim uppercase">DEMO ENVIRONMENT</span>
-          </label>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => setShowAdd(false)} className="btn-secondary">CANCEL</button>
             <button type="button" onClick={addKey} className="btn-primary">SAVE</button>

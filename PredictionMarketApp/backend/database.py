@@ -190,7 +190,6 @@ DEFAULT_SETTINGS = {
     "theme": "dark",
     "loop_interval_ms": "500",
     "max_simultaneous_bots": "10",
-    "paper_trading_mode": "true",
     "daily_loss_limit_enabled": "false",
     "daily_loss_limit_amount": "100",
     "max_open_positions": "10",
@@ -203,6 +202,8 @@ DEFAULT_SETTINGS = {
     "license_key": "",
     "license_valid": "false",
     "first_launch": "true",
+    # Once true, Examples group / sample bot are never auto-created again (even if deleted).
+    "example_workspace_seed_completed": "false",
 }
 
 
@@ -245,28 +246,53 @@ def init_db():
             (key, value),
         )
 
-    group_exists = conn.execute(
-        "SELECT COUNT(*) FROM groups WHERE name = 'Examples'"
-    ).fetchone()[0]
-    if not group_exists:
-        conn.execute("INSERT INTO groups (name, sort_order) VALUES ('Examples', 0)")
-        group_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-        conn.execute(
-            "INSERT INTO bots (name, group_id, status, is_paper) VALUES (?, ?, 'stopped', 1)",
-            ("Daily Loss Limit Example", group_id),
-        )
-        bot_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-        conn.execute(
-            "INSERT INTO rules (bot_id, line_number, line_type, left_operand, operator, right_operand) "
-            "VALUES (?, 1, 'IF', 'DailyPnL', 'lt', '-10')",
-            (bot_id,),
-        )
-        conn.execute(
-            "INSERT INTO rules (bot_id, line_number, line_type, action_type) "
-            "VALUES (?, 2, 'THEN', 'STOP')",
-            (bot_id,),
+    def _example_seed_done(c: sqlite3.Connection) -> bool:
+        r = c.execute(
+            "SELECT value FROM settings WHERE key = 'example_workspace_seed_completed'"
+        ).fetchone()
+        return bool(r and r[0] == "true")
+
+    def _set_example_seed_done(c: sqlite3.Connection) -> None:
+        c.execute(
+            "INSERT OR REPLACE INTO settings (key, value) "
+            "VALUES ('example_workspace_seed_completed', 'true')"
         )
 
+    if not _example_seed_done(conn):
+        examples_exists = conn.execute(
+            "SELECT COUNT(*) FROM groups WHERE name = 'Examples'"
+        ).fetchone()[0]
+        bot_count = conn.execute("SELECT COUNT(*) FROM bots").fetchone()[0]
+        if examples_exists or bot_count > 0:
+            # Existing DB or user already has bots; do not inject Examples if they removed it.
+            _set_example_seed_done(conn)
+        else:
+            conn.execute("INSERT INTO groups (name, sort_order) VALUES ('Examples', 0)")
+            group_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            conn.execute(
+                "INSERT INTO bots (name, group_id, status, is_paper) VALUES (?, ?, 'stopped', 0)",
+                ("Daily Loss Limit Example", group_id),
+            )
+            bot_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            conn.execute(
+                "INSERT INTO rules (bot_id, line_number, line_type, left_operand, operator, right_operand) "
+                "VALUES (?, 1, 'IF', 'DailyPnL', 'lt', '-10')",
+                (bot_id,),
+            )
+            conn.execute(
+                "INSERT INTO rules (bot_id, line_number, line_type, action_type) "
+                "VALUES (?, 2, 'THEN', 'STOP')",
+                (bot_id,),
+            )
+            _set_example_seed_done(conn)
+
     _dedupe_sentiment_index_markets(conn)
+
+    try:
+        conn.execute("UPDATE api_keys SET is_demo = 0")
+        conn.execute("UPDATE bots SET is_paper = 0")
+        conn.execute("DELETE FROM settings WHERE key = 'paper_trading_mode'")
+    except Exception:
+        pass
 
     conn.commit()

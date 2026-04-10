@@ -98,9 +98,6 @@ def bulk_edit_group(id: int, data: BulkBotEdit):
     db = get_db()
     updates = []
     params = []
-    if data.is_paper is not None:
-        updates.append("is_paper = ?")
-        params.append(int(data.is_paper))
     if data.trigger_type is not None:
         updates.append("trigger_type = ?")
         params.append(data.trigger_type)

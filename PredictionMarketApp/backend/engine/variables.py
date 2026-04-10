@@ -1,8 +1,9 @@
 import asyncio
 import logging
+import time
 
 from backend.database import get_db
-from backend.kalshi.client import get_kalshi_client
+from backend.kalshi.client import get_kalshi_client, kalshi_iso_to_unix
 from backend.kalshi.implied_prob import (
     book_quotes_pct_from_rest,
     implied_odds_yes_no_from_rest,
@@ -177,6 +178,35 @@ async def _resolve_all_core(
 
     variables["DailyPnL"] = daily_pnl
     variables["PositionSize"] = position_size
+    # Same market as PositionSize: 1.0 if Kalshi reports any non-zero position on this ticker.
+    variables["HasPosition"] = 1.0 if abs(position_size) > 1e-9 else 0.0
+    # Magnitude of net position on this market (always >= 0).
+    variables["AbsPositionSize"] = abs(position_size)
+
+    resting_count = 0.0
+    oldest_age_sec = 0.0
+    if client and bot and bot["market_ticker"]:
+        try:
+            tkr = bot["market_ticker"]
+            odata = await client.get_orders(ticker=tkr, status="resting", limit=200)
+            now = time.time()
+            oldest_delta = 0.0
+            for o in odata.get("orders") or []:
+                if (o.get("type") or "").lower() != "limit":
+                    continue
+                ts = kalshi_iso_to_unix(o.get("created_time"))
+                if ts is None:
+                    continue
+                resting_count += 1.0
+                delta = max(0.0, now - ts)
+                if delta > oldest_delta:
+                    oldest_delta = delta
+            oldest_age_sec = oldest_delta
+        except Exception as e:
+            logger.debug("get_orders for resting vars failed: %s", e)
+
+    variables["RestingLimitCount"] = resting_count
+    variables["OldestRestingLimitAgeSec"] = oldest_age_sec
 
     indexes = db.execute("SELECT * FROM sentiment_indexes").fetchall()
     index_ticker_set: set[str] = set()

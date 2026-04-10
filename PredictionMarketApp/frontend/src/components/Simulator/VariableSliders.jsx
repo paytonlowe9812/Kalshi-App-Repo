@@ -5,6 +5,10 @@ const VAR_RANGES = {
   YES_price: { min: 0, max: 100, step: 1 },
   NO_price: { min: 0, max: 100, step: 1 },
   PositionSize: { min: -100, max: 100, step: 1 },
+  HasPosition: { min: 0, max: 1, step: 1 },
+  AbsPositionSize: { min: 0, max: 500, step: 1 },
+  RestingLimitCount: { min: 0, max: 50, step: 1 },
+  OldestRestingLimitAgeSec: { min: 0, max: 3600, step: 1 },
 };
 
 const DEFAULT_RANGE = { min: 0, max: 100, step: 1 };

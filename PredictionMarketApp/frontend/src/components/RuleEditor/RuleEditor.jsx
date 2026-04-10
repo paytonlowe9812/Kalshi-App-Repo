@@ -83,10 +83,16 @@ export default function RuleEditor({ onOpenSimulator }) {
 
   const updateRule = (index, updatedRule) => { const n = [...rules]; n[index] = updatedRule; setRules(n); saveRules(n); };
   const addLine = (lineType) => {
+    const defaultParams =
+      lineType === 'GOTO' ? '{"line":1}' :
+      lineType === 'PAUSE' ? '{"ms":500}' :
+      lineType === 'CANCEL_STALE' ? '{"max_age_ms":60000}' :
+      lineType === 'NOOP' ? '{}' :
+      null;
     const newRule = { line_number: rules.length + 1, line_type: lineType,
       left_operand: null, operator: ['IF', 'AND', 'OR'].includes(lineType) ? 'gt' : null,
       right_operand: null, action_type: ['THEN', 'ELSE'].includes(lineType) ? '' : lineType === 'GOTO' ? 'GOTO' : lineType,
-      action_params: lineType === 'GOTO' ? '{"line":1}' : null, group_id: null, group_logic: null, exec_count: 0 };
+      action_params: defaultParams, group_id: null, group_logic: null, exec_count: 0 };
     const n = [...rules, newRule]; setRules(n); saveRules(n);
   };
   const moveUp = (i) => { if (i === 0) return; const n = [...rules]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; n.forEach((r, j) => r.line_number = j + 1); setRules(n); saveRules(n); };

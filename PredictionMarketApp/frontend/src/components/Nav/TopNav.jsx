@@ -13,15 +13,10 @@ const TABS = [
 ];
 
 export default function TopNav() {
-  const { activeTab, setActiveTab, paperMode } = useAppStore();
+  const { activeTab, setActiveTab } = useAppStore();
 
   return (
     <nav className="bg-terminal-surface border-b border-terminal-border-dim">
-      {paperMode && (
-        <div className="bg-terminal-amber-faint text-terminal-amber text-xs text-center py-1 px-4 border-b border-terminal-border-dim tracking-widest">
-          [ PAPER TRADING MODE -- NO REAL ORDERS ]
-        </div>
-      )}
       <div className="hidden md:flex items-center h-9 gap-0 overflow-x-auto px-1">
         {TABS.map((tab) => (
           <button

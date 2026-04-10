@@ -43,6 +43,10 @@ def _parse_action(rule: dict) -> Action | None:
         message=params.get("message"),
         line=params.get("line"),
         line_var=params.get("line_var"),
+        ms=params.get("ms"),
+        ms_var=params.get("ms_var"),
+        max_age_ms=params.get("max_age_ms"),
+        max_age_ms_var=params.get("max_age_ms_var"),
         fired_line=rule.get("line_number"),
     )
 
@@ -138,7 +142,7 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
                 return EvaluationResult(action=action, fired_line=ln)
             line_index += 1
 
-        elif lt in ("LOG", "ALERT"):
+        elif lt in ("LOG", "ALERT", "NOOP", "PAUSE", "CANCEL_STALE"):
             action = _parse_action(rule)
             if action:
                 action.fired_line = ln

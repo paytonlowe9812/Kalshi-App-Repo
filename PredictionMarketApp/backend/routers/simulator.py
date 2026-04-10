@@ -1,5 +1,8 @@
+import json
+
 from fastapi import APIRouter, HTTPException
 from backend.database import get_db
+from backend.engine.actions import _resolve_ms
 from backend.models import SimulationRequest, SimulationResponse, SimulationStep
 
 router = APIRouter(prefix="/api/simulator", tags=["simulator"])
@@ -37,6 +40,10 @@ def run_simulation(data: SimulationRequest):
         "YES_price": 50.0,
         "NO_price": 50.0,
         "PositionSize": 0.0,
+        "HasPosition": 0.0,
+        "AbsPositionSize": 0.0,
+        "RestingLimitCount": 0.0,
+        "OldestRestingLimitAgeSec": 0.0,
     }
     user_vars = db.execute(
         "SELECT name, value FROM variables WHERE bot_id = ?", (data.bot_id,)
@@ -98,15 +105,31 @@ def run_simulation(data: SimulationRequest):
             if condition_met:
                 action_type = rule.get("action_type", "")
                 action = {"type": action_type}
-                import json as _json
                 try:
-                    params = _json.loads(rule.get("action_params", "{}") or "{}")
+                    params = json.loads(rule.get("action_params", "{}") or "{}")
                 except (ValueError, TypeError):
                     params = {}
                 action.update(params)
+                reason = f"Action: {action_type}"
+                if action_type == "PAUSE":
+                    ms = _resolve_ms(
+                        params.get("ms_var"), params.get("ms"), variables, 0, "PAUSE"
+                    )
+                    reason = f"Action: PAUSE ({ms} ms, simulated, no wall-clock wait)"
+                elif action_type == "CANCEL_STALE":
+                    ms = _resolve_ms(
+                        params.get("max_age_ms_var"),
+                        params.get("max_age_ms"),
+                        variables,
+                        60_000,
+                        "CANCEL_STALE",
+                    )
+                    reason = (
+                        f"Action: CANCEL_STALE (would cancel limits older than {ms} ms)"
+                    )
                 steps.append(SimulationStep(
                     line_number=ln, result="hit",
-                    reason=f"Action: {action_type}",
+                    reason=reason,
                     action_fired=action,
                 ))
                 final_action = action
@@ -125,11 +148,34 @@ def run_simulation(data: SimulationRequest):
         elif lt == "ELSE":
             if not condition_met:
                 action_type = rule.get("action_type", "")
-                action = {"type": action_type}
+                try:
+                    params = json.loads(rule.get("action_params", "{}") or "{}")
+                except (ValueError, TypeError):
+                    params = {}
+                action = (
+                    {"type": action_type, **params} if action_type else None
+                )
+                reason = f"Else branch: {action_type}"
+                if action_type == "PAUSE":
+                    ms = _resolve_ms(
+                        params.get("ms_var"), params.get("ms"), variables, 0, "PAUSE"
+                    )
+                    reason = f"Else branch: PAUSE ({ms} ms, simulated, no wall-clock wait)"
+                elif action_type == "CANCEL_STALE":
+                    ms = _resolve_ms(
+                        params.get("max_age_ms_var"),
+                        params.get("max_age_ms"),
+                        variables,
+                        60_000,
+                        "CANCEL_STALE",
+                    )
+                    reason = (
+                        f"Else branch: CANCEL_STALE (limits older than {ms} ms)"
+                    )
                 steps.append(SimulationStep(
                     line_number=ln, result="hit",
-                    reason=f"Else branch: {action_type}",
-                    action_fired=action if action_type else None,
+                    reason=reason,
+                    action_fired=action,
                 ))
                 if action_type:
                     final_action = action
@@ -140,9 +186,8 @@ def run_simulation(data: SimulationRequest):
             line_index += 1
 
         elif lt == "GOTO":
-            import json as _json
             try:
-                params = _json.loads(rule.get("action_params", "{}") or "{}")
+                params = json.loads(rule.get("action_params", "{}") or "{}")
             except (ValueError, TypeError):
                 params = {}
             target = params.get("line", 0)
@@ -172,9 +217,32 @@ def run_simulation(data: SimulationRequest):
             ))
             break
 
-        elif lt in ("LOG", "ALERT", "SET_VAR"):
+        elif lt in ("LOG", "ALERT", "SET_VAR", "NOOP", "PAUSE", "CANCEL_STALE"):
+            reason = f"{lt} executed"
+            if lt == "PAUSE":
+                try:
+                    p = json.loads(rule.get("action_params", "{}") or "{}")
+                except (ValueError, TypeError):
+                    p = {}
+                ms = _resolve_ms(p.get("ms_var"), p.get("ms"), variables, 0, "PAUSE")
+                reason = f"PAUSE {ms} ms (simulated, no wall-clock wait)"
+            elif lt == "NOOP":
+                reason = "NOOP (no effect)"
+            elif lt == "CANCEL_STALE":
+                try:
+                    p = json.loads(rule.get("action_params", "{}") or "{}")
+                except (ValueError, TypeError):
+                    p = {}
+                ms = _resolve_ms(
+                    p.get("max_age_ms_var"),
+                    p.get("max_age_ms"),
+                    variables,
+                    60_000,
+                    "CANCEL_STALE",
+                )
+                reason = f"CANCEL_STALE (limits older than {ms} ms, simulated)"
             steps.append(SimulationStep(
-                line_number=ln, result="hit", reason=f"{lt} executed"
+                line_number=ln, result="hit", reason=reason
             ))
             line_index += 1
 

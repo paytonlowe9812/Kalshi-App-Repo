@@ -20,7 +20,6 @@ from backend.kalshi.implied_prob import (
 logger = logging.getLogger(__name__)
 
 KALSHI_WS_URL = "wss://api.elections.kalshi.com/trade-api/ws/v2"
-KALSHI_DEMO_WS_URL = "wss://demo-api.kalshi.co/trade-api/ws/v2"
 
 
 def _normalize_pem(pem_text: str) -> str:
@@ -55,7 +54,6 @@ class KalshiWebSocketManager:
         self._key_id: Optional[str] = None
         self._private_key_pem: Optional[str] = None
         self._rsa_key = None
-        self._demo: bool = False
         self._cmd_id = 0
 
     def _next_cmd_id(self) -> int:
@@ -70,10 +68,9 @@ class KalshiWebSocketManager:
             "send_initial_snapshot": True,
         }
 
-    def configure(self, key_id: str, private_key_pem: str, demo: bool = False):
+    def configure(self, key_id: str, private_key_pem: str):
         self._key_id = key_id
         self._private_key_pem = private_key_pem
-        self._demo = demo
         try:
             self._rsa_key = _load_rsa_key(private_key_pem)
         except Exception as e:
@@ -82,7 +79,7 @@ class KalshiWebSocketManager:
 
     @property
     def ws_url(self) -> str:
-        return KALSHI_DEMO_WS_URL if self._demo else KALSHI_WS_URL
+        return KALSHI_WS_URL
 
     def _build_auth_headers(self) -> dict:
         if not self._key_id or not self._rsa_key:

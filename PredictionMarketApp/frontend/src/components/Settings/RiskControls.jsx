@@ -25,9 +25,6 @@ export default function RiskControls({ settings, onUpdate, onPanic }) {
       <div className="border-t border-terminal-border-dim pt-4">
         <button type="button" onClick={onPanic} className="w-full py-3 border border-terminal-red text-terminal-red-text bg-transparent hover:bg-terminal-red/20 font-mono font-semibold text-sm transition-colors shadow-glow-red">EMERGENCY STOP -- CLOSE ALL POSITIONS & STOP ALL BOTS</button>
       </div>
-      <div className="space-y-2">
-        <Toggle checked={s.paper_trading_mode === 'true'} onChange={(v) => onUpdate('paper_trading_mode', v ? 'true' : 'false')} label="PAPER TRADING MODE (all bots simulate trades)" />
-      </div>
     </div>
   );
 }

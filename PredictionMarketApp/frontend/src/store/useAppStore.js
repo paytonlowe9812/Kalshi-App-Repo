@@ -16,7 +16,6 @@ const useAppStore = create((set) => ({
   activeTab: 'bots',
   theme: 'dark',
   licenseValid: false,
-  paperMode: true,
   panicActive: false,
   activeIndexId: null,
   activeBotId: null,
@@ -34,7 +33,6 @@ const useAppStore = create((set) => ({
     set({ theme });
   },
   setLicenseValid: (valid) => set({ licenseValid: valid }),
-  setPaperMode: (mode) => set({ paperMode: mode }),
   setPanicActive: (active) => set({ panicActive: active }),
   setActiveIndexId: (id) => set({ activeIndexId: id }),
   setActiveBotId: (id) => set({ activeBotId: id }),

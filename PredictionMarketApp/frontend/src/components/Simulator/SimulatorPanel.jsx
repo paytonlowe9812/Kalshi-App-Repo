@@ -4,7 +4,13 @@ import VariableSliders from './VariableSliders';
 import PlaybackControls from './PlaybackControls';
 import SimResultPanel from './SimResultPanel';
 
-const CORE_DEFAULTS = { YES_price: 50, NO_price: 50, PositionSize: 0 };
+const CORE_DEFAULTS = {
+  YES_price: 50,
+  NO_price: 50,
+  PositionSize: 0,
+  RestingLimitCount: 0,
+  OldestRestingLimitAgeSec: 0,
+};
 
 function buildSimVariablesFromGroups(groups) {
   const next = { ...CORE_DEFAULTS };

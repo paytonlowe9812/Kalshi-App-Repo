@@ -10,6 +10,9 @@ const LINE_TYPES = [
   { type: 'CONT', color: 'border-terminal-green-bright/50 bg-terminal-green/20 active:bg-terminal-green/30', key: 'C', fullType: 'CONTINUE' },
   { type: 'STOP', color: 'border-terminal-red bg-terminal-red/20 active:bg-terminal-red/30', key: 'S' },
   { type: 'LOG', color: 'border-terminal-border-dim bg-terminal-panel active:bg-terminal-amber-faint', key: 'L' },
+  { type: 'NOOP', color: 'border-terminal-border-dim bg-terminal-panel active:bg-terminal-amber-faint', key: 'N' },
+  { type: 'PAUSE', color: 'border-terminal-amber-dim bg-terminal-amber-faint active:bg-terminal-amber/20', key: 'Z' },
+  { type: 'CX', color: 'border-terminal-red/40 bg-terminal-red/10 active:bg-terminal-red/20', key: 'X', fullType: 'CANCEL_STALE' },
   { type: 'VAR', color: 'border-terminal-amber-dim bg-terminal-amber-faint active:bg-terminal-amber/20', key: 'V', fullType: 'SET_VAR' },
   { type: 'ALERT', color: 'border-terminal-amber bg-terminal-amber-faint active:bg-terminal-amber/20', key: '!' },
 ];
