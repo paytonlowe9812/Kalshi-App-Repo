@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "postinstall": "node ../scripts/invoke-generate-launchers.cjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

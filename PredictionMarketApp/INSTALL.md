@@ -2,7 +2,7 @@
 
 These steps work for **anyone** with a normal browser. No GitHub account is needed as long as the repository is **Public**.
 
-**Maintainers:** Before sharing, replace `YOUR-GITHUB-USERNAME` everywhere below with your GitHub user or organization name (for example `octocat`). If your repository name is not `PredictionMarketApp`, replace that too. If your default branch is not `main`, change `main` in the download URL.
+**Maintainers:** Replace `YOUR-GITHUB-USERNAME` with your GitHub user or organization (for example `octocat`). Replace `YOUR-REPO-NAME` with this **GitHub repository name** (for `github.com/you/Kalshi-App-Repo`, use `Kalshi-App-Repo` — not the `PredictionMarketApp` folder name). If your default branch is not `main`, change `main` in the download URLs.
 
 ---
 
@@ -12,19 +12,19 @@ Send people **one** of these:
 
 | What | Link |
 |------|------|
-| **This install guide** (GitHub Pages site) | `https://YOUR-GITHUB-USERNAME.github.io/PredictionMarketApp/` |
-| **This install guide** (markdown on GitHub) | `https://github.com/YOUR-GITHUB-USERNAME/PredictionMarketApp/blob/main/INSTALL.md` |
-| **Download latest source** (`main` branch, always current) | `https://github.com/YOUR-GITHUB-USERNAME/PredictionMarketApp/archive/refs/heads/main.zip` |
-| **Download latest release** (same layout; use after you publish at least one version tag) | `https://github.com/YOUR-GITHUB-USERNAME/PredictionMarketApp/releases/latest/download/PredictionMarketApp.zip` |
+| **This install guide** (GitHub Pages site) | `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/` |
+| **This install guide** (markdown in repo) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
+| **Download latest source** (`main` branch, always current) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/archive/refs/heads/main.zip` |
+| **Download latest release** (app subtree; after first version tag) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp.zip` |
 
 The **source** and **release** ZIPs contain the same tracked files as a `git clone` (no `node_modules`, no `.venv`, no database).
 
 ### GitHub Pages (maintainers)
 
-To serve the styled install page at `https://YOUR-GITHUB-USERNAME.github.io/PredictionMarketApp/`:
+To serve the styled install page at `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/`:
 
 1. **Settings** → **Pages** → **Build and deployment** → set **Source** to **GitHub Actions**.
-2. Push the `docs/` folder and `.github/workflows/pages.yml` to `main`, or open **Actions** → **Deploy Pages** → **Run workflow**.
+2. Ensure **`.github/workflows/pages.yml` exists at the repository root** (for this monorepo it lives next to `PredictionMarketApp/`, not inside it). Push to `main`, or open **Actions** → **Deploy Pages** → **Run workflow**.
 
 ---
 
@@ -45,8 +45,10 @@ To serve the styled install page at `https://YOUR-GITHUB-USERNAME.github.io/Pred
 ## After downloading
 
 1. Unzip the file.
-2. Open the folder that contains **`backend`**, **`frontend`**, and **`requirements.txt`**.  
-   GitHub names the folder like `PredictionMarketApp-main` — that is fine; use it as the project root.
+2. Open the folder that contains **`backend`**, **`frontend`**, and **`requirements.txt`** (the **project root** for install commands).
+   - If you downloaded the **full repository** ZIP, you may see a top folder like `Kalshi-App-Repo-main`, then open **`PredictionMarketApp`** inside it.
+   - If you downloaded the **release** ZIP (`PredictionMarketApp.zip`), paths inside the archive usually start with **`PredictionMarketApp/`** — open that folder (or use it as the root if your unzipper flattens one level).
+   - GitHub sometimes names archives `…-main`; that is fine.
 
 ### What you need installed
 
@@ -81,6 +83,8 @@ npm install
 cd ..
 ```
 
+The **`npm install`** step runs on **Windows, macOS, and Linux** and automatically creates **`launch.ps1`**, **`launch.bat`**, and **`launch.sh`** in the project root (they are not in Git). If you see a warning that Python was not found, fix `PATH` and run **`npm install`** again inside **`frontend/`**, or run **`python scripts/generate_launchers.py`** from the project root.
+
 ### Run the app (two terminals)
 
 Keep the virtual environment activated. From the **project root**:
@@ -102,7 +106,7 @@ npm run dev
 
 Open **http://127.0.0.1:5173** in a browser.
 
-On **Windows** you can instead run **`.\launch.ps1`** from the project root (starts both servers and opens the browser). You may need to allow script execution in PowerShell.
+On **Windows**, run **`.\launch.ps1`** or **`launch.bat`** (after **`npm install`** created them) to start both servers and open the browser. You may need to allow script execution in PowerShell. On **macOS/Linux**, **`./launch.sh`** does the same with backend in the background.
 
 ---
 

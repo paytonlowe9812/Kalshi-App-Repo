@@ -6,18 +6,18 @@ Local web app with a FastAPI backend and a React (Vite) frontend for building an
 
 To let **anyone** download and install **without a GitHub account**, the repository must be **Public** (GitHub: **Settings → General → Danger zone → Change visibility**).
 
-**Share any of these** (replace `YOUR-GITHUB-USERNAME` and, if needed, `PredictionMarketApp`):
+**Share any of these** (replace `YOUR-GITHUB-USERNAME` and `YOUR-REPO-NAME` — for `github.com/you/Kalshi-App-Repo`, the repo name is `Kalshi-App-Repo`):
 
 | Purpose | URL |
 |--------|-----|
-| Install page (**GitHub Pages**, styled) | `https://YOUR-GITHUB-USERNAME.github.io/PredictionMarketApp/` |
-| Install guide (markdown on GitHub) | `https://github.com/YOUR-GITHUB-USERNAME/PredictionMarketApp/blob/main/INSTALL.md` |
-| Direct ZIP of latest `main` | `https://github.com/YOUR-GITHUB-USERNAME/PredictionMarketApp/archive/refs/heads/main.zip` |
-| Direct ZIP of **latest release** | `https://github.com/YOUR-GITHUB-USERNAME/PredictionMarketApp/releases/latest/download/PredictionMarketApp.zip` |
+| Install page (**GitHub Pages**, styled) | `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/` |
+| Install guide (markdown in repo) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
+| Direct ZIP of latest `main` | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/archive/refs/heads/main.zip` |
+| Direct ZIP of **latest release** | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp.zip` |
 
-The **release** link works after you push at least one version tag (for example `v1.0.0`); see [.github/workflows/release-zip.yml](.github/workflows/release-zip.yml).
+The **release** link works after you push at least one version tag (for example `v1.0.0`). If the app lives inside a monorepo, workflows are in the **repository root** [`.github/workflows/`](../.github/workflows/) (next to the `PredictionMarketApp` folder).
 
-**Pages:** enable **Settings → Pages → Source: GitHub Actions**, then push `docs/` (see [.github/workflows/pages.yml](.github/workflows/pages.yml)).
+**Pages:** enable **Settings → Pages → Source: GitHub Actions**, then run **Deploy Pages** (see root `.github/workflows/pages.yml`).
 
 The same instructions live in **[INSTALL.md](INSTALL.md)** and **[docs/index.html](docs/index.html)**.
 
@@ -54,11 +54,11 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The workflow in `.github/workflows/release-zip.yml` builds those ZIPs automatically. For a **public** repo, anyone can use **`/releases/latest/download/PredictionMarketApp.zip`** without logging in. Others can open the **Releases** page or follow **[INSTALL.md](INSTALL.md)**.
+The workflow in the repository root `.github/workflows/release-zip.yml` builds those ZIPs automatically. For a **public** repo, anyone can use **`/releases/latest/download/PredictionMarketApp.zip`** without logging in. Others can open the **Releases** page or follow **[INSTALL.md](INSTALL.md)**.
 
 ### Option C: ZIP from GitHub Actions (every push to `main`)
 
-Each successful push to the **`main`** branch runs `.github/workflows/main-branch-zip.yml` and uploads **`PredictionMarketApp-main.zip`** as a workflow artifact (not a Release).
+Each successful push to **`main`** (under `PredictionMarketApp/`) runs the repository root workflow **`main-branch-zip.yml`** and uploads **`PredictionMarketApp-main.zip`** as a workflow artifact (not a Release).
 
 1. Open the repository on GitHub and go to the **Actions** tab.
 2. Select **Main branch ZIP artifact** in the workflow list.
@@ -149,6 +149,10 @@ npm install
 cd ..
 ```
 
+**`npm install`** runs a **postinstall** step on **Windows, macOS, and Linux** that creates **`launch.ps1`**, **`launch.bat`**, and **`launch.sh`** in the app root (gitignored). It tries `python3` / `python` (and on Windows `py -3`).
+
+If that step warns that Python was not found, install Python, ensure it is on `PATH`, then either run **`npm install`** again inside **`frontend/`** or run **`python scripts/generate_launchers.py`** manually from the app root.
+
 ## Run in development (two terminals)
 
 You must start the **backend** and **frontend** separately. Run all commands from the repository root unless noted.
@@ -194,13 +198,15 @@ $env:VITE_API_PROXY_TARGET="http://127.0.0.1:9000"; npm run dev
 
 ## Windows: one-step launcher
 
-If you use PowerShell, you can start the backend and frontend in separate windows and open the browser with:
+After **`npm install`** in **`frontend/`** (or a manual **`python scripts/generate_launchers.py`**), start both servers from PowerShell:
 
 ```powershell
 .\launch.ps1
 ```
 
-The script checks for Python and npm, installs missing `frontend/node_modules` or Python packages when needed, and frees ports 8000 and 5173 before starting (see `launch.ps1` for details).
+(or double-click **`launch.bat`**). The script checks for Python and npm, installs missing `frontend/node_modules` or Python packages when needed, and frees ports 8000 and 5173 before starting.
+
+**macOS / Linux:** use **`./launch.sh`** after generating (starts backend in the background and the Vite dev server in the foreground).
 
 ## Run a production-style build (single server)
 

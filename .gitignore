@@ -179,3 +179,11 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Claude Code / local AI (do not publish)
+.claude/
+
+# Per-machine launch scripts (create with: python PredictionMarketApp/scripts/generate_launchers.py)
+PredictionMarketApp/launch.ps1
+PredictionMarketApp/launch.bat
+PredictionMarketApp/launch.sh
