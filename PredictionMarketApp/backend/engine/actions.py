@@ -2,6 +2,8 @@ import asyncio
 import logging
 import time
 
+import httpx
+
 from backend.database import get_db
 from backend.models import Action
 from backend.kalshi.client import get_kalshi_client, kalshi_iso_to_unix
@@ -93,8 +95,17 @@ async def execute(bot_id: int, action: Action, variables: dict):
     ticker = bot["market_ticker"]
     cs = _bot_contract_side(bot)
 
+    def _api_err_msg(exc: BaseException) -> str:
+        if isinstance(exc, httpx.HTTPStatusError) and exc.response is not None:
+            try:
+                return f"{exc.response.status_code} {exc.response.text[:400]}"
+            except Exception:
+                pass
+        return str(exc)
+
     if action.type == "BUY":
         contracts = _resolve_int(action.contracts_var, action.contracts, variables, 1, "BUY contracts")
+        sent = False
         if client and ticker:
             try:
                 await client.create_order(
@@ -104,15 +115,23 @@ async def execute(bot_id: int, action: Action, variables: dict):
                     count=contracts,
                     type="market",
                 )
+                sent = True
             except Exception as e:
-                logger.error(f"Order failed: {e}")
-        _log_trade(
-            bot_id, bot["name"], ticker, "BUY",
-            contracts, _ref_price(variables, cs), action.fired_line,
-        )
+                logger.error("BUY order failed: %s", _api_err_msg(e))
+        else:
+            if not client:
+                logger.warning("BUY skipped: no active Kalshi API key.")
+            elif not ticker:
+                logger.warning("BUY skipped: bot has no market_ticker.")
+        if sent:
+            _log_trade(
+                bot_id, bot["name"], ticker, "BUY",
+                contracts, _ref_price(variables, cs), action.fired_line,
+            )
 
     elif action.type == "SELL":
         contracts = _resolve_int(action.contracts_var, action.contracts, variables, 1, "SELL contracts")
+        sent = False
         if client and ticker:
             try:
                 await client.create_order(
@@ -122,20 +141,29 @@ async def execute(bot_id: int, action: Action, variables: dict):
                     count=contracts,
                     type="market",
                 )
+                sent = True
             except Exception as e:
-                logger.error(f"Order failed: {e}")
-        _log_trade(
-            bot_id, bot["name"], ticker, "SELL",
-            contracts, _ref_price(variables, cs), action.fired_line,
-        )
+                logger.error("SELL order failed: %s", _api_err_msg(e))
+        else:
+            if not client:
+                logger.warning("SELL skipped: no active Kalshi API key.")
+            elif not ticker:
+                logger.warning("SELL skipped: bot has no market_ticker.")
+        if sent:
+            _log_trade(
+                bot_id, bot["name"], ticker, "SELL",
+                contracts, _ref_price(variables, cs), action.fired_line,
+            )
 
     elif action.type == "LIMIT":
         contracts = _resolve_int(action.contracts_var, action.contracts, variables, 1, "LIMIT contracts")
         price_cents = _resolve_float(action.price_var, action.price, variables, 50.0, "LIMIT price")
-        price = int(price_cents * 100)
+        # UI and Kalshi use cents on the quoted side (1-99), not dollars or basis points.
+        api_price = max(1, min(99, int(round(price_cents))))
         lim_side = (action.side or cs).lower()
         if lim_side not in ("yes", "no"):
             lim_side = cs
+        sent = False
         if client and ticker:
             try:
                 await client.create_order(
@@ -144,17 +172,25 @@ async def execute(bot_id: int, action: Action, variables: dict):
                     order_action="buy",
                     count=contracts,
                     type="limit",
-                    price=price,
+                    price=api_price,
                 )
+                sent = True
             except Exception as e:
-                logger.error(f"Limit order failed: {e}")
-        _log_trade(
-            bot_id, bot["name"], ticker,
-            f"LIMIT_{lim_side.upper()}",
-            contracts, price_cents, action.fired_line,
-        )
+                logger.error("Limit order failed: %s", _api_err_msg(e))
+        else:
+            if not client:
+                logger.warning("LIMIT skipped: no active Kalshi API key.")
+            elif not ticker:
+                logger.warning("LIMIT skipped: bot has no market_ticker.")
+        if sent:
+            _log_trade(
+                bot_id, bot["name"], ticker,
+                f"LIMIT_{lim_side.upper()}",
+                contracts, float(api_price), action.fired_line,
+            )
 
     elif action.type == "CLOSE":
+        close_orders = 0
         if client and ticker:
             try:
                 positions = await client.get_positions()
@@ -179,14 +215,21 @@ async def execute(bot_id: int, action: Action, variables: dict):
                                     count=count,
                                     type="market",
                                 )
+                            close_orders += 1
                         break
             except Exception as e:
-                logger.error(f"Close failed: {e}")
-        _log_trade(
-            bot_id, bot["name"], ticker,
-            "CLOSE",
-            0, 0, action.fired_line,
-        )
+                logger.error("Close failed: %s", _api_err_msg(e))
+        else:
+            if not client:
+                logger.warning("CLOSE skipped: no active Kalshi API key.")
+            elif not ticker:
+                logger.warning("CLOSE skipped: bot has no market_ticker.")
+        if close_orders > 0:
+            _log_trade(
+                bot_id, bot["name"], ticker,
+                "CLOSE",
+                0, 0, action.fired_line,
+            )
 
     elif action.type == "SET_VAR":
         if action.var_name and action.value is not None:

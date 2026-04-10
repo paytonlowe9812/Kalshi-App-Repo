@@ -26,7 +26,8 @@ frontend/node_modules/
 # Claude / local AI tooling
 .claude/
 
-# Generated locally by: python scripts/generate_launchers.py
+# Generated locally by: python scripts/generate_launchers.py (launch.bat, launch.sh).
+# launch.ps1 is legacy / not generated anymore; keep ignored so stray copies are never committed.
 launch.ps1
 launch.bat
 launch.sh

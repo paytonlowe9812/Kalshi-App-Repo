@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 import time
 import base64
@@ -256,8 +257,13 @@ class KalshiClient:
             "count": count,
             "type": type,
         }
+        # Kalshi expects yes_price / no_price in cents, each 1-99 (see CreateOrderRequest).
         if price is not None:
-            body["yes_price"] = price
+            p = max(1, min(99, int(round(price))))
+            if api_side == "yes":
+                body["yes_price"] = p
+            else:
+                body["no_price"] = p
         return await self._request("POST", "/portfolio/orders", json=body)
 
     async def get_orders(
@@ -302,12 +308,52 @@ class KalshiClient:
 
 
 _active_client: Optional[KalshiClient] = None
+# (key_id, key_secret PEM) for the in-memory REST client; must match DB active row.
+_active_cred_signature: Optional[tuple[str, str]] = None
 
 
 def get_kalshi_client() -> Optional[KalshiClient]:
+    """Return the REST client for the API key row with is_active=1.
+
+    The Test Connection button uses a temporary client only; bots and orders use
+    this singleton. We re-read the DB each time so the process never trades with
+    a stale or never-initialized client while the DB already has an active key.
+    """
+    global _active_client, _active_cred_signature
+
+    from backend.database import get_db
+
+    db = get_db()
+    row = db.execute(
+        "SELECT key_id, key_secret FROM api_keys WHERE is_active = 1 ORDER BY id LIMIT 1"
+    ).fetchone()
+    if not row:
+        _active_client = None
+        _active_cred_signature = None
+        return None
+
+    sig = (row["key_id"], row["key_secret"])
+    if _active_client is not None and _active_cred_signature == sig:
+        return _active_client
+
+    old = _active_client
+    _active_client = KalshiClient(row["key_id"], row["key_secret"])
+    _active_cred_signature = sig
+    if old is not None and old is not _active_client:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            pass
+        else:
+            loop.create_task(old.close())
     return _active_client
 
 
-def set_kalshi_client(client: KalshiClient):
-    global _active_client
+def set_kalshi_client(client: Optional[KalshiClient]) -> None:
+    """Set the REST client (e.g. at startup). Signature must match get_kalshi_client()."""
+    global _active_client, _active_cred_signature
     _active_client = client
+    if client is None:
+        _active_cred_signature = None
+    else:
+        _active_cred_signature = (client.key_id, client._private_key_pem)

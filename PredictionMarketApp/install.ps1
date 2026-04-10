@@ -53,5 +53,5 @@ Pop-Location
 
 Write-Host ""
 Write-Host "Install finished." -ForegroundColor Green
-Write-Host "Start the app:  .\launch.ps1   or   launch.bat" -ForegroundColor Green
+Write-Host "Start the app:  python scripts\launch.py   or   launch.bat" -ForegroundColor Green
 Write-Host ""

@@ -74,14 +74,18 @@ def delete_key(id: int):
 @router.post("/{id}/test")
 async def test_key(id: int):
     db = get_db()
-    row = db.execute(
-        "SELECT key_id, key_secret FROM api_keys WHERE id = ?", (id,)
-    ).fetchone()
+    row = db.execute("SELECT * FROM api_keys WHERE id = ?", (id,)).fetchone()
     if not row:
         raise HTTPException(404, "Key not found")
     client = KalshiClient(row["key_id"], row["key_secret"])
     result = await client.test_connection()
-    await client.close()
+    try:
+        # Test uses a throwaway client; trading uses get_kalshi_client(). If this row
+        # is the active key, install REST + WS so "CONNECTION OK" matches live trading.
+        if result.get("valid") and int(row["is_active"] or 0) == 1:
+            await _apply_kalshi_from_key_row(row)
+    finally:
+        await client.close()
     return result
 
 

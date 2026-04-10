@@ -10,7 +10,7 @@ Prerequisites: **Python 3.10+**, **Node.js 18+** (`npm` on `PATH`).
 
 1. **Install once:** Windows **`install.bat`** or **`.\install.ps1`** — macOS/Linux **`chmod +x install.sh`** then **`./install.sh`**.
 
-2. **Run:** Windows **`launch.bat`** or **`.\launch.ps1`** — macOS/Linux **`./launch.sh`**.
+2. **Run:** **`python scripts/launch.py`** — or after **`npm install`** in **`frontend/`**, use **`launch.bat`** (Windows) or **`./launch.sh`** (macOS/Linux).
 
 3. Open **http://127.0.0.1:5173**.
 
@@ -18,7 +18,7 @@ The installers create **`.venv/`**, install **`requirements.txt`**, run **`npm i
 
 ## Distribution (maintainers)
 
-For installs without signing in, keep the repo **Public**. Every push to **`main`** runs **`.github/workflows/release-zip.yml`** at the monorepo root: it publishes **`PredictionMarketApp-latest-Windows.zip`**, **`PredictionMarketApp-latest-macOS.tar.gz`**, and **`PredictionMarketApp-latest-Linux.tar.gz`** on a single rolling **Latest** release (tag **`latest`**). Those archives omit **`launch.ps1`**, **`launch.bat`**, and **`launch.sh`** (via **`export-ignore`**); run **`install.*`** or **`python scripts/generate_launchers.py`** after unpacking. GitHub Pages for **`docs/index.html`** deploys on **`PredictionMarketApp/**`** changes: **`.github/workflows/pages.yml`**.
+For installs without signing in, keep the repo **Public**. Every push to **`main`** runs **`.github/workflows/release-zip.yml`** at the monorepo root: it publishes **`PredictionMarketApp-latest-Windows.zip`**, **`PredictionMarketApp-latest-macOS.tar.gz`**, and **`PredictionMarketApp-latest-Linux.tar.gz`** on a single rolling **Latest** release (tag **`latest`**). Those archives omit **`launch.bat`** and **`launch.sh`** (via **`export-ignore`**); run **`install.*`** or **`python scripts/generate_launchers.py`** after unpacking, then start with **`python scripts/launch.py`** or the generated shortcuts. GitHub Pages for **`docs/index.html`** deploys on **`PredictionMarketApp/**`** changes: **`.github/workflows/pages.yml`**.
 
 ## Requirements
 

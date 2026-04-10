@@ -68,6 +68,8 @@ export default function ApiKeyManager({ firstLaunch }) {
       <h3 className="panel-header mb-3">API KEY MANAGEMENT</h3>
       <p className="text-[10px] text-terminal-amber-dim mb-3 leading-relaxed max-w-xl">
         Production Kalshi only (api.elections.kalshi.com). Use your live API credentials.
+        Bots place orders with the key marked SET ACTIVE / ACTIVE only. TEST checks that key&apos;s credentials;
+        if that row is already active, a passing TEST also refreshes the live trading client.
       </p>
 
       {firstLaunch && (

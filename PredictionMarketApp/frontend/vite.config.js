@@ -7,7 +7,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
+      // Bind IPv4 so http://127.0.0.1:5173 matches (Windows often maps "localhost" to ::1 only).
+      host: '127.0.0.1',
       port: 5173,
+      strictPort: true,
       proxy: {
         '/api': {
           target,

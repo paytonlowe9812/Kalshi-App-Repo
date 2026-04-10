@@ -44,7 +44,7 @@ for (const [cmd, args] of attempts) {
 }
 
 console.warn('[postinstall] Could not run generate_launchers.py (is Python 3.10+ on PATH?).');
-console.warn('[postinstall] Launch scripts were not created. After fixing Python, run:');
+console.warn('[postinstall] launch.bat / launch.sh were not created. After fixing Python, run:');
 console.warn(`[postinstall]   cd "${root}"`);
 console.warn('[postinstall]   python scripts/generate_launchers.py');
 process.exit(0);

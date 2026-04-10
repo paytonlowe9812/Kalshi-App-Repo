@@ -79,7 +79,7 @@
   <p>These steps work for <strong>anyone</strong> with a normal browser. No GitHub account is needed as long as the repository is <strong>Public</strong>.</p>
 
   <h2>Download</h2>
-    <p>On GitHub open your repository, then <strong>Releases</strong> &rarr; <strong>Latest</strong>. Download <strong>PredictionMarketApp-latest-Windows.zip</strong>, <strong>PredictionMarketApp-latest-macOS.tar.gz</strong>, or <strong>PredictionMarketApp-latest-Linux.tar.gz</strong> for your system. That single release is rebuilt automatically on every push to <code>main</code>; archives match a <code>git clone</code> of the app (no <code>node_modules</code>, no <code>.venv</code>, no database). Release archives intentionally omit <code>launch.ps1</code>, <code>launch.bat</code>, and <code>launch.sh</code>; run the installer or <code>python scripts/generate_launchers.py</code> after unpacking to create them.</p>
+    <p>On GitHub open your repository, then <strong>Releases</strong> &rarr; <strong>Latest</strong>. Download <strong>PredictionMarketApp-latest-Windows.zip</strong>, <strong>PredictionMarketApp-latest-macOS.tar.gz</strong>, or <strong>PredictionMarketApp-latest-Linux.tar.gz</strong> for your system. That single release is rebuilt automatically on every push to <code>main</code>; archives match a <code>git clone</code> of the app (no <code>node_modules</code>, no <code>.venv</code>, no database). Release archives omit <code>launch.bat</code> and <code>launch.sh</code>; run the installer or <code>python scripts/generate_launchers.py</code> after unpacking, or start with <code>python scripts/launch.py</code>.</p>
 
   <hr />
 
@@ -119,8 +119,8 @@
 
   <h2>Start the app</h2>
   <p>From the same folder:</p>
-  <p><strong>Windows:</strong> <code>launch.bat</code> or <code>.\launch.ps1</code></p>
-  <p><strong>macOS / Linux:</strong> <code>./launch.sh</code></p>
+  <p><strong>Windows:</strong> <code>python scripts\launch.py</code> or <code>launch.bat</code></p>
+  <p><strong>macOS / Linux:</strong> <code>python3 scripts/launch.py</code> or <code>./launch.sh</code></p>
   <p>Open <strong>http://127.0.0.1:5173</strong>.</p>
 
   <hr />

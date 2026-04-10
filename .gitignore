@@ -186,7 +186,8 @@ cython_debug/
 # Monorepo only: do not init a second Git repo inside the app folder
 PredictionMarketApp/.git/
 
-# Per-machine launch scripts (create with: python PredictionMarketApp/scripts/generate_launchers.py)
+# Per-machine launch shortcuts (generate_launchers.py writes .bat / .sh; launch.py is the canonical runner).
+# launch.ps1 is legacy; keep ignored so stray copies are never committed.
 PredictionMarketApp/launch.ps1
 PredictionMarketApp/launch.bat
 PredictionMarketApp/launch.sh

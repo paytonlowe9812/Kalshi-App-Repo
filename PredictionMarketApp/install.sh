@@ -41,5 +41,5 @@ echo "Installing frontend (npm)..."
 
 echo ""
 echo "Install finished."
-echo "Start the app:  ./launch.sh"
+echo "Start the app:  python3 scripts/launch.py   or   ./launch.sh"
 echo ""

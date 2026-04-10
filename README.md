@@ -16,15 +16,17 @@ All commands below use the **`PredictionMarketApp/`** folder (the one that conta
 
    - **macOS / Linux:** in a terminal run **`chmod +x install.sh`** once, then **`./install.sh`**.
 
-That creates a Python virtual environment, installs dependencies, runs **`npm install`**, and generates the launch scripts.
+That creates a Python virtual environment, installs dependencies, runs **`npm install`**, and generates **`launch.bat`** / **`launch.sh`** (optional shortcuts; both are gitignored).
 
 ## Start the app
 
 Still in **`PredictionMarketApp/`**:
 
-- **Windows:** **`launch.bat`** or **`.\launch.ps1`**
+- **Any OS:** **`python scripts/launch.py`**
 
-- **macOS / Linux:** **`./launch.sh`**
+- **Windows:** **`launch.bat`** (after install / `npm install`)
+
+- **macOS / Linux:** **`./launch.sh`** (after install / `npm install`)
 
 Open **http://127.0.0.1:5173** in your browser.
 

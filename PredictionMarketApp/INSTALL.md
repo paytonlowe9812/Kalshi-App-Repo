@@ -6,7 +6,7 @@ Full monorepo notes: **[README.md](../README.md)** at the repository root.
 
 1. Download your platform archive from GitHub **Releases** ( **Latest** ), or clone the repo and open this folder (**`PredictionMarketApp/`**).
 
-   **Note:** Release ZIPs/tarballs do **not** include **`launch.ps1`**, **`launch.bat`**, or **`launch.sh`**. The install step below creates those (or run **`python scripts/generate_launchers.py`**).
+   **Note:** Release ZIPs/tarballs do **not** include **`launch.bat`** or **`launch.sh`**. The install step below creates those (or run **`python scripts/generate_launchers.py`**). You can always start with **`python scripts/launch.py`** from the app folder.
 
 2. Install **Python 3.10+** and **Node.js 18+** if you do not have them.
 
@@ -18,9 +18,9 @@ Full monorepo notes: **[README.md](../README.md)** at the repository root.
 
 4. Start the app:
 
-   - **Windows:** **`launch.bat`** or **`.\launch.ps1`**
+   - **Windows:** **`python scripts\launch.py`** or **`launch.bat`**
 
-   - **macOS / Linux:** **`./launch.sh`**
+   - **macOS / Linux:** **`python3 scripts/launch.py`** or **`./launch.sh`**
 
 5. Open **http://127.0.0.1:5173**.
 
