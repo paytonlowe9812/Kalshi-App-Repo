@@ -1,16 +1,22 @@
-# Three distinct release assets (GitHub may drop duplicate-byte uploads):
+# Single rolling release: tag `latest`, name "Latest".
+# Rebuilds platform archives on every push to `main` and replaces all previous releases.
+#
+# Assets (stable names for releases/latest/download/...):
 #   PredictionMarketApp-Windows.zip
 #   PredictionMarketApp-macOS.tar.gz
 #   PredictionMarketApp-Linux.tar.gz
-# Each archive adds a one-line file .release-platform (windows | macOS | linux) so checksums differ.
-# GitHub also always lists "Source code (zip)" and "Source code (tar.gz)" — those are automatic, not these.
+# Each archive adds .release-platform (windows | macOS | linux) so GitHub keeps all three.
 
 name: Release source archives (Windows / macOS / Linux)
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+
+concurrency:
+  group: rolling-release
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -22,14 +28,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Delete existing releases (keep one rolling Latest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          gh release list --limit 200 --json tagName -q '.[].tagName' | while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+            echo "Removing release: $tag"
+            gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
+          done
+
       - name: Build OS-labeled archives
         run: |
           set -eux
-          VERSION="${GITHUB_REF_NAME}"
+          VERSION="latest"
           PREFIX="PredictionMarketApp-${VERSION}"
           WS="${GITHUB_WORKSPACE}"
 
-          # Windows .zip (fresh tree + platform marker so asset is unique)
           WORK="$(mktemp -d)"
           git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
           echo windows > "${WORK}/PredictionMarketApp/.release-platform"
@@ -37,7 +53,6 @@ jobs:
           cp "${WS}/${PREFIX}-Windows.zip" "${WS}/PredictionMarketApp-Windows.zip"
           rm -rf "${WORK}"
 
-          # macOS .tar.gz
           WORK="$(mktemp -d)"
           git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
           echo macOS > "${WORK}/PredictionMarketApp/.release-platform"
@@ -45,7 +60,6 @@ jobs:
           cp "${WS}/${PREFIX}-macOS.tar.gz" "${WS}/PredictionMarketApp-macOS.tar.gz"
           rm -rf "${WORK}"
 
-          # Linux .tar.gz
           WORK="$(mktemp -d)"
           git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
           echo linux > "${WORK}/PredictionMarketApp/.release-platform"
@@ -58,9 +72,14 @@ jobs:
             "${WS}/PredictionMarketApp-macOS.tar.gz" \
             "${WS}/PredictionMarketApp-Linux.tar.gz"
 
-      - name: Upload to GitHub Release
+      - name: Publish Latest release
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe
         with:
+          tag_name: latest
+          name: Latest
+          target_commitish: ${{ github.sha }}
+          body: |
+            Rolling build from `main` at [`${{ github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}).
           files: |
             PredictionMarketApp-Windows.zip
             PredictionMarketApp-macOS.tar.gz
@@ -68,4 +87,6 @@ jobs:
             PredictionMarketApp-*-Windows.zip
             PredictionMarketApp-*-macOS.tar.gz
             PredictionMarketApp-*-Linux.tar.gz
-          generate_release_notes: true
+          draft: false
+          prerelease: false
+          make_latest: true

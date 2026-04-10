@@ -9,7 +9,7 @@ on:
     branches:
       - main
     paths:
-      - 'PredictionMarketApp/docs/**'
+      - 'PredictionMarketApp/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 

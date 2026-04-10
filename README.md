@@ -1,137 +1,33 @@
-## Installation and setup
+# Kalshi App Repo
 
-### Requirements
+All commands below use the **`PredictionMarketApp/`** folder (the one that contains `backend/`, `frontend/`, and `requirements.txt`). If you use a **release** ZIP, that folder is what you unpack. If you **clone** the monorepo, run `cd PredictionMarketApp` first (from the repo root).
 
-- **Python** 3.10 or newer (3.12 recommended)
-- **Node.js** 18 or newer (LTS) and **npm**
-- **Git** (only if you clone; not needed for a ZIP download)
+## Prerequisites
 
-Optional: a **virtual environment** for Python.
+**Python 3.10+** and **Node.js 18+** (with **npm**). Install those once from [python.org](https://www.python.org/downloads/) and [nodejs.org](https://nodejs.org/) if needed.
 
-### Downloads
+## Install
 
-For a **public** repository, share the GitHub **Releases** page: open **Latest** and download the archive for each platform — **`PredictionMarketApp-Windows.zip`**, **`PredictionMarketApp-macOS.tar.gz`**, or **`PredictionMarketApp-Linux.tar.gz`**. Those assets are created when you push a version tag (for example `v1.0.0`); see **`.github/workflows/release-zip.yml`** at the repository root.
+1. Get the app: from GitHub **Releases**, open **Latest** (one rolling release, updated on every push to `main`), and download the archive for your OS — or clone the repo and enter **`PredictionMarketApp/`** as above.
 
-### Get the code
+2. Run **one** installer for your system (from inside **`PredictionMarketApp/`**):
 
-**Download ZIP (no Git):** GitHub **Code → Download ZIP**, extract, then open **`PredictionMarketApp/`** inside the archive (the folder that contains `backend/`, `frontend/`, and `requirements.txt`). That folder is your working directory for all commands below.
+   - **Windows:** double-click **`install.bat`**, or in PowerShell run **`.\install.ps1`**.
 
-**Clone:**
+   - **macOS / Linux:** in a terminal run **`chmod +x install.sh`** once, then **`./install.sh`**.
 
-```bash
-git clone <your-repo-url>
-cd PredictionMarketApp
-```
+That creates a Python virtual environment, installs dependencies, runs **`npm install`**, and generates the launch scripts.
 
-If you cloned the full monorepo, `cd` into **`PredictionMarketApp/`** first.
+## Start the app
 
-**Release archives:** Each platform archive contains a **`PredictionMarketApp/`** tree. Open that folder as the app root. A one-line **`PredictionMarketApp/.release-platform`** file may be present so releases upload reliably; you can delete it after extracting.
+Still in **`PredictionMarketApp/`**:
 
-### Install dependencies
+- **Windows:** **`launch.bat`** or **`.\launch.ps1`**
 
-Run these from **`PredictionMarketApp/`** (app root).
+- **macOS / Linux:** **`./launch.sh`**
 
-**Windows (PowerShell or Command Prompt)**
+Open **http://127.0.0.1:5173** in your browser.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-cd frontend
-npm install
-cd ..
-```
+---
 
-**macOS / Linux**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-cd frontend
-npm install
-cd ..
-```
-
-If `python3` is not available, use `python` where your system provides Python 3.10+.
-
-**`npm install`** in **`frontend/`** runs a postinstall step that creates **`launch.ps1`**, **`launch.bat`**, and **`launch.sh`** in the app root (gitignored). If Python was not found, fix `PATH` and run **`npm install`** again in **`frontend/`**, or run **`python scripts/generate_launchers.py`** from the app root.
-
-### Run in development (two terminals)
-
-From **`PredictionMarketApp/`**, with the virtual environment activated.
-
-**Terminal 1 — API (port 8000)**
-
-Windows:
-
-```powershell
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-macOS / Linux:
-
-```bash
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-Use `python3` if that is how you invoke Python.
-
-**Terminal 2 — UI (port 5173)**
-
-```bash
-cd frontend
-npm run dev
-```
-
-Open **http://127.0.0.1:5173**. The Vite dev server proxies `/api` to **http://127.0.0.1:8000** by default.
-
-**Optional — change API proxy:** set `VITE_API_PROXY_TARGET` when starting Vite (see `frontend/vite.config.js`).
-
-```bash
-# macOS / Linux
-VITE_API_PROXY_TARGET=http://127.0.0.1:9000 npm run dev
-```
-
-```powershell
-# Windows PowerShell
-$env:VITE_API_PROXY_TARGET="http://127.0.0.1:9000"; npm run dev
-```
-
-### Windows: one-step launcher
-
-After **`npm install`** in **`frontend/`** (or **`python scripts/generate_launchers.py`**):
-
-```powershell
-.\launch.ps1
-```
-
-Or double-click **`launch.bat`**. On **macOS / Linux**, use **`./launch.sh`** after generating launchers.
-
-### Production-style build (single server)
-
-From **`PredictionMarketApp/`**:
-
-```bash
-cd frontend
-npm run build
-cd ..
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
-```
-
-Open **http://127.0.0.1:8000**. Rebuild the frontend after UI changes.
-
-### Data and secrets
-
-The app stores SQLite under **`PredictionMarketApp/data/`**. That directory is gitignored. Do not commit database files or share them publicly. Add Kalshi API credentials in the app under **CONFIG** after first run.
-
-### Repository hygiene
-
-- **`.claude/`** and **`.cursor/`** are ignored at the repo and app level so local editor metadata is not published. If they were committed earlier, remove them with `git rm -r --cached .claude` at the repo root (or the tracked path), then commit and push.
-- Do not commit **`.venv/`** or **`frontend/node_modules/`**.
-
-### More detail
-
-Feature overview, private-repo download notes, and extra context: **[PredictionMarketApp/README.md](PredictionMarketApp/README.md)**. Shorter install handout: **[PredictionMarketApp/INSTALL.md](PredictionMarketApp/INSTALL.md)**.
+More detail (production build, API proxy, developers): **[PredictionMarketApp/README.md](PredictionMarketApp/README.md)**.

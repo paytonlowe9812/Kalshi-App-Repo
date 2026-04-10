@@ -39,8 +39,13 @@ Write-Host "   Kalshi Bot Builder — Launching...   " -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-    Write-Host "ERROR: python not found on PATH. Install Python 3.10+ and retry." -ForegroundColor Red
+$VenvPy = Join-Path $Root ".venv\Scripts\python.exe"
+if (Test-Path $VenvPy) {
+    $Py = $VenvPy
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $Py = "python"
+} else {
+    Write-Host "ERROR: Python not found. Run install.ps1 or install.bat once, then retry." -ForegroundColor Red
     pause; exit 1
 }
 
@@ -58,10 +63,10 @@ if (-not (Test-Path $nodeModules)) {
     Write-Host "npm install complete." -ForegroundColor Green
 }
 
-$check = python -c "import fastapi, uvicorn" 2>&1
+$check = & $Py -c "import fastapi, uvicorn" 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Missing Python dependencies — running pip install..." -ForegroundColor Yellow
-    python -m pip install -r (Join-Path $Root "requirements.txt") --quiet
+    Write-Host "Missing Python dependencies — run install.ps1 or: pip install -r requirements.txt" -ForegroundColor Yellow
+    & $Py -m pip install -r (Join-Path $Root "requirements.txt") --quiet
     Write-Host "pip install complete." -ForegroundColor Green
 }
 
@@ -80,7 +85,7 @@ Write-Host ''
 Write-Host '  Backend  http://127.0.0.1:8000' -ForegroundColor Cyan
 Write-Host '  Press Ctrl+C to stop.' -ForegroundColor DarkGray
 Write-Host ''
-python -m uvicorn backend.main:app --reload --port 8000
+& $Py -m uvicorn backend.main:app --reload --port 8000
 Write-Host ''
 Write-Host 'Backend stopped.' -ForegroundColor Yellow
 pause
@@ -136,14 +141,14 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 FRONTEND="$ROOT/frontend"
 
-if command -v python3 >/dev/null 2>&1; then
+if [ -x "$ROOT/.venv/bin/python" ]; then
+  PY="$ROOT/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
   PY=python3
-else
+elif command -v python >/dev/null 2>&1; then
   PY=python
-fi
-
-if ! command -v "$PY" >/dev/null 2>&1; then
-  echo "ERROR: python not found. Install Python 3.10+." >&2
+else
+  echo "ERROR: python not found. Run ./install.sh once, then retry." >&2
   exit 1
 fi
 

@@ -6,9 +6,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'PredictionMarketApp/**'
-      - '.github/workflows/main-branch-zip.yml'
   workflow_dispatch:
 
 permissions:

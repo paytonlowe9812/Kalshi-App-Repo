@@ -16,24 +16,26 @@ if (!fs.existsSync(gen)) {
 }
 
 const win = process.platform === 'win32';
+const venvPython = win
+  ? path.join(root, '.venv', 'Scripts', 'python.exe')
+  : path.join(root, '.venv', 'bin', 'python');
 
 /** @type {Array<[string, string[]]>} */
-const attempts = win
-  ? [
-      ['py', ['-3', gen]],
-      ['python', [gen]],
-      ['python3', [gen]],
-    ]
-  : [
-      ['python3', [gen]],
-      ['python', [gen]],
-    ];
+const attempts = [];
+if (fs.existsSync(venvPython)) {
+  attempts.push([venvPython, [gen]]);
+}
+if (win) {
+  attempts.push(['py', ['-3', gen]], ['python', [gen]], ['python3', [gen]]);
+} else {
+  attempts.push(['python3', [gen]], ['python', [gen]]);
+}
 
 for (const [cmd, args] of attempts) {
   const r = spawnSync(cmd, args, {
     cwd: root,
     stdio: 'inherit',
-    shell: win,
+    shell: win && !path.isAbsolute(cmd),
     env: process.env,
   });
   if (r.status === 0) {

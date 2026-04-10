@@ -2,199 +2,52 @@
 
 Local web app with a FastAPI backend and a React (Vite) frontend for building and running trading bots against Kalshi. The UI talks to the API over `/api`; in development the Vite dev server proxies those requests to the backend.
 
-**Installation (clone, ZIP, dependencies, run):** use the repository root **[README.md](../README.md)**. The sections below cover download options and deeper notes.
+End-user setup (download, one installer, launch) is in the repository root **[README.md](../README.md)** and **[INSTALL.md](INSTALL.md)**.
 
-## Distribution and releases
+## Quick start (this folder)
 
-To let **anyone** download **without signing in**, keep the repository **Public** (GitHub: **Settings → General → Danger zone → Change visibility**).
+Prerequisites: **Python 3.10+**, **Node.js 18+** (`npm` on `PATH`).
 
-**Releases** (after you push a version tag such as `v1.0.0`) include three platform archives of this app: **`PredictionMarketApp-Windows.zip`**, **`PredictionMarketApp-macOS.tar.gz`**, and **`PredictionMarketApp-Linux.tar.gz`**. They are built by **`.github/workflows/release-zip.yml`** at the repository root (next to the `PredictionMarketApp` folder). Point people at **Releases** then **Latest** on GitHub.
+1. **Install once:** Windows **`install.bat`** or **`.\install.ps1`** — macOS/Linux **`chmod +x install.sh`** then **`./install.sh`**.
 
-Optional: enable **Settings → Pages → Source: GitHub Actions** to host this install page from `docs/index.html` (see root `.github/workflows/pages.yml`).
+2. **Run:** Windows **`launch.bat`** or **`.\launch.ps1`** — macOS/Linux **`./launch.sh`**.
 
-The same install steps appear in **[INSTALL.md](INSTALL.md)** and **[docs/index.html](docs/index.html)**.
+3. Open **http://127.0.0.1:5173**.
+
+The installers create **`.venv/`**, install **`requirements.txt`**, run **`npm install`** in **`frontend/`**, and regenerate **`launch.*`** (those launch files stay gitignored).
+
+## Distribution (maintainers)
+
+For installs without signing in, keep the repo **Public**. Every push to **`main`** runs **`.github/workflows/release-zip.yml`** at the monorepo root: it rebuilds **`PredictionMarketApp-Windows.zip`**, **`PredictionMarketApp-macOS.tar.gz`**, and **`PredictionMarketApp-Linux.tar.gz`** and publishes them on a single rolling **Latest** release (tag **`latest`**). GitHub Pages for **`docs/index.html`** deploys on **`PredictionMarketApp/**`** changes: **`.github/workflows/pages.yml`**.
 
 ## Requirements
 
-- **Python** 3.10 or newer (3.12 recommended)
-- **Node.js** 18 or newer (LTS) and **npm**
-- **Git** (only if you clone the repository; not needed for a ZIP download)
+- **Python** 3.10+ (3.12 recommended)
+- **Node.js** 18+ (LTS) and **npm**
+- **Git** only if you clone (not needed for a release download)
 
-Optional but recommended: a **virtual environment** for Python so dependencies do not clash with other projects.
+## Advanced: two terminals (no launch scripts)
 
-## Download as ZIP (no Git)
+With **`.venv`** activated and dependencies installed (or after **`install.ps1`** / **`install.sh`**):
 
-GitHub hosts the project in two convenient ways:
-
-### Option A: Latest code from the default branch
-
-1. Open your repository on GitHub.
-2. Click the green **Code** button.
-3. Choose **Download ZIP**.
-4. Extract the archive. The folder name is usually `PredictionMarketApp-main` (or `PredictionMarketApp-<branch>`), not necessarily `PredictionMarketApp`. Open the folder that contains `backend/`, `frontend/`, and `requirements.txt`.
-5. Continue from **[Install dependencies](#install-dependencies)** below (use that folder as the project root in your terminal).
-
-This ZIP only includes files tracked in Git (no `node_modules`, `.venv`, or database files).
-
-### Option B: Versioned ZIP from Releases
-
-If this repository uses [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases), each tagged version (for example `v1.0.0`) gets **three** archives of the `PredictionMarketApp` source tree: **Windows** (`.zip`), **macOS** (`.tar.gz`), and **Linux** (`.tar.gz`). Stable names (`PredictionMarketApp-Windows.zip`, `PredictionMarketApp-macOS.tar.gz`, `PredictionMarketApp-Linux.tar.gz`) are attached so **`releases/latest/download/...`** always points at the newest release. Each archive includes a one-line file **`PredictionMarketApp/.release-platform`** (`windows`, `macOS`, or `linux`) so GitHub does not drop a duplicate; you can delete that file after extracting.
-
-Maintainers create a release by pushing a tag:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-The workflow in the repository root `.github/workflows/release-zip.yml` builds those archives automatically. For a **public** repo, anyone can download from **Releases** without logging in.
-
-### Option C: ZIP from GitHub Actions (every push to `main`)
-
-Each successful push to **`main`** (under `PredictionMarketApp/`) runs the repository root workflow **`main-branch-zip.yml`** and uploads **`PredictionMarketApp-main.zip`** as a workflow artifact (not a Release).
-
-1. Open the repository on GitHub and go to the **Actions** tab.
-2. Select **Main branch ZIP artifact** in the workflow list.
-3. Open the latest successful run.
-4. Scroll to **Artifacts** and download **PredictionMarketApp-main**.
-
-Artifacts are stored for **90 days** (`retention-days` in the workflow), after which GitHub deletes them. This is useful for testers who want the latest `main` without using Git. Downloading artifacts usually requires a **GitHub login**; for anonymous public installs use **Releases** instead.
-
-### Private repositories
-
-If the repository is **private**, anyone downloading a ZIP must have **read access** to the repo (collaborator, team member, or organization member with appropriate permissions).
-
-- **Code → Download ZIP** and **Releases** assets only work in the browser when you are **signed in** to a GitHub account that is allowed to view the repository.
-- Do **not** share personal access tokens (PATs) or passwords in chat or commit them to the project.
-
-**Download with the GitHub CLI** (after `gh auth login` with a user that can read the repo):
-
-```bash
-gh auth login
-gh repo clone OWNER/REPO PredictionMarketApp
-```
-
-Replace `OWNER` and `REPO` with your GitHub owner and repository name.
-
-**Download the default branch as a ZIP using your `gh` login** (`curl -L` follows GitHub’s redirect to `codeload.github.com`; change `main` if your default branch has another name):
-
-```bash
-gh auth login
-curl -fL -H "Authorization: Bearer $(gh auth token)" \
-  -o PredictionMarketApp-main.zip \
-  "https://api.github.com/repos/OWNER/REPO/zipball/main"
-```
-
-For a **release** asset, use **Releases** in the browser, or `gh release download TAG` with a repo that has releases, or the [GitHub REST API for release assets](https://docs.github.com/en/rest/releases/assets) with a token that has `repo` scope (classic) or **Contents: Read** (fine-grained, for that repository).
-
-**Download with `curl`** (classic PAT with `repo` scope, or a fine-grained token with read access to repository contents):
-
-```bash
-curl -sL \
-  -H "Accept: application/vnd.github+json" \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-  -o PredictionMarketApp-main.zip \
-  "https://api.github.com/repos/OWNER/REPO/zipball/main"
-```
-
-Use a short-lived token, revoke it when no longer needed, and never paste tokens into issues or public documents.
-
-## Clone the repository
-
-If you use Git, clone the repo then **`cd PredictionMarketApp`** (monorepo) so this folder is your shell cwd. Full steps: **[README.md](../README.md)**.
-
-## Install dependencies
-
-### Python (all platforms)
-
-From the repository root (the folder that contains `backend/` and `requirements.txt`):
-
-**Windows (PowerShell or Command Prompt)**
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-**macOS / Linux**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-If `python3` is not available, use `python` where your system provides Python 3.10+.
-
-### Frontend (all platforms)
-
-```bash
-cd frontend
-npm install
-cd ..
-```
-
-**`npm install`** runs a **postinstall** step on **Windows, macOS, and Linux** that creates **`launch.ps1`**, **`launch.bat`**, and **`launch.sh`** in the app root (gitignored). It tries `python3` / `python` (and on Windows `py -3`).
-
-If that step warns that Python was not found, install Python, ensure it is on `PATH`, then either run **`npm install`** again inside **`frontend/`** or run **`python scripts/generate_launchers.py`** manually from the app root.
-
-## Run in development (two terminals)
-
-You must start the **backend** and **frontend** separately. Run all commands from the repository root unless noted.
-
-**Terminal 1 – API (port 8000)**
-
-Windows:
-
-```powershell
-python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-macOS / Linux:
+**Terminal 1 — API**
 
 ```bash
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Use `python3` if that is how you invoke Python on your machine.
+Use **`.venv\Scripts\python`** on Windows or **`.venv/bin/python`** on macOS/Linux if you did not activate the venv.
 
-**Terminal 2 – UI (port 5173)**
+**Terminal 2 — UI**
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Open the app in a browser at **http://127.0.0.1:5173** (or the URL Vite prints). The dev server proxies `/api` to **http://127.0.0.1:8000** by default.
-
 ### Optional: change the API proxy target (frontend)
 
-If the API listens on another host or port, set `VITE_API_PROXY_TARGET` when starting Vite (see `frontend/vite.config.js`). Example:
-
-```bash
-# macOS / Linux
-VITE_API_PROXY_TARGET=http://127.0.0.1:9000 npm run dev
-```
-
-```powershell
-# Windows PowerShell
-$env:VITE_API_PROXY_TARGET="http://127.0.0.1:9000"; npm run dev
-```
-
-## Windows: one-step launcher
-
-After **`npm install`** in **`frontend/`** (or a manual **`python scripts/generate_launchers.py`**), start both servers from PowerShell:
-
-```powershell
-.\launch.ps1
-```
-
-(or double-click **`launch.bat`**). The script checks for Python and npm, installs missing `frontend/node_modules` or Python packages when needed, and frees ports 8000 and 5173 before starting.
-
-**macOS / Linux:** use **`./launch.sh`** after generating (starts backend in the background and the Vite dev server in the foreground).
+Set **`VITE_API_PROXY_TARGET`** when starting Vite (see **`frontend/vite.config.js`**).
 
 ## Run a production-style build (single server)
 

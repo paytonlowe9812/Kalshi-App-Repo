@@ -79,7 +79,7 @@
   <p>These steps work for <strong>anyone</strong> with a normal browser. No GitHub account is needed as long as the repository is <strong>Public</strong>.</p>
 
   <h2>Download</h2>
-  <p>On GitHub open your repository, then <strong>Releases</strong> &rarr; <strong>Latest</strong>. Download <strong>PredictionMarketApp-Windows.zip</strong>, <strong>PredictionMarketApp-macOS.tar.gz</strong>, or <strong>PredictionMarketApp-Linux.tar.gz</strong> for your system. Those assets are published when a maintainer pushes a version tag; they contain the same tracked files as a <code>git clone</code> of the app (no <code>node_modules</code>, no <code>.venv</code>, no database).</p>
+  <p>On GitHub open your repository, then <strong>Releases</strong> &rarr; <strong>Latest</strong>. Download <strong>PredictionMarketApp-Windows.zip</strong>, <strong>PredictionMarketApp-macOS.tar.gz</strong>, or <strong>PredictionMarketApp-Linux.tar.gz</strong> for your system. That single release is rebuilt automatically on every push to <code>main</code>; archives match a <code>git clone</code> of the app (no <code>node_modules</code>, no <code>.venv</code>, no database).</p>
 
   <hr />
 
@@ -95,65 +95,37 @@
   <h2>Make the repository public (maintainers)</h2>
   <ol class="steps">
     <li>On GitHub: <strong>Settings</strong> &rarr; <strong>General</strong> &rarr; <strong>Danger Zone</strong> &rarr; <strong>Change repository visibility</strong> &rarr; <strong>Public</strong>.</li>
-    <li>Push a version tag once so the <strong>latest release</strong> link works, for example:
-      <pre><code>git tag v1.0.0
-git push origin v1.0.0</code></pre>
-      The release workflow attaches Windows (<code>.zip</code>), macOS (<code>.tar.gz</code>), and Linux (<code>.tar.gz</code>) archives. Each includes a one-line <code>PredictionMarketApp/.release-platform</code> file so GitHub keeps all three downloads. GitHub also adds <strong>Source code (zip)</strong> and <strong>Source code (tar.gz)</strong> automatically on every release (full repo snapshot, not the same as these three).
-    </li>
+    <li>Push to <code>main</code>: the workflow <code>.github/workflows/release-zip.yml</code> creates or updates one <strong>Latest</strong> release (tag <code>latest</code>) with Windows (<code>.zip</code>), macOS (<code>.tar.gz</code>), and Linux (<code>.tar.gz</code>) archives. Each includes a one-line <code>PredictionMarketApp/.release-platform</code> file so GitHub keeps all three downloads. Older semver releases are removed each run so only <strong>Latest</strong> remains.</li>
   </ol>
 
   <hr />
 
   <h2>After downloading</h2>
   <ol class="steps">
-    <li>Unzip the file.</li>
-    <li>Open the folder that contains <strong>backend</strong>, <strong>frontend</strong>, and <strong>requirements.txt</strong>. If you unzipped the <strong>full repo</strong>, open the <code>PredictionMarketApp</code> folder inside it. Release ZIPs usually contain a <code>PredictionMarketApp</code> path at the top — use that folder as the project root.</li>
+    <li>Unzip the archive.</li>
+    <li>Open the folder that contains <strong>backend</strong>, <strong>frontend</strong>, and <strong>requirements.txt</strong> (often named <code>PredictionMarketApp</code>).</li>
   </ol>
 
-  <h2>What you need installed</h2>
+  <h2>Prerequisites</h2>
   <ul>
     <li><strong>Python</strong> 3.10+ — <a href="https://www.python.org/downloads/">python.org</a></li>
     <li><strong>Node.js</strong> 18+ LTS and <strong>npm</strong> — <a href="https://nodejs.org/">nodejs.org</a></li>
   </ul>
 
-  <h2>Install dependencies</h2>
-  <p>Open a terminal <strong>in the project root</strong> (the folder with <code>requirements.txt</code>).</p>
+  <h2>Install (one step)</h2>
+  <p>Open a terminal in that project folder, then:</p>
+  <p><strong>Windows:</strong> double-click <code>install.bat</code>, or run <code>.\install.ps1</code> in PowerShell.</p>
+  <p><strong>macOS / Linux:</strong> <code>chmod +x install.sh</code> once, then <code>./install.sh</code>.</p>
 
-  <p><strong>Windows (PowerShell)</strong></p>
-  <pre><code>python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-cd frontend
-npm install
-cd ..</code></pre>
-
-  <p><strong>macOS / Linux</strong></p>
-  <pre><code>python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-cd frontend
-npm install
-cd ..</code></pre>
-  <p>The <strong><code>npm install</code></strong> step (above) runs on <strong>Windows</strong>, <strong>macOS</strong>, and <strong>Linux</strong> and automatically creates <code>launch.ps1</code>, <code>launch.bat</code>, and <code>launch.sh</code> in the project root (not in Git). If Python was not on <code>PATH</code>, fix that and run <code>npm install</code> again in <code>frontend/</code>, or run <code>python scripts/generate_launchers.py</code> manually.</p>
-
-  <h2>Run the app (two terminals)</h2>
-  <p>Keep the virtual environment activated. From the <strong>project root</strong>:</p>
-
-  <p><strong>Terminal 1 — API</strong></p>
-  <pre><code>python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000</code></pre>
-  <p>On macOS/Linux use <code>python3</code> if that is your command for Python 3.</p>
-
-  <p><strong>Terminal 2 — web UI</strong></p>
-  <pre><code>cd frontend
-npm run dev</code></pre>
-  <p>Open <strong>http://127.0.0.1:5173</strong> in a browser.</p>
-  <p>On <strong>Windows</strong> you can run <strong><code>.\launch.ps1</code></strong> or <strong><code>launch.bat</code></strong>; on <strong>macOS/Linux</strong> run <strong><code>./launch.sh</code></strong> (created during <code>npm install</code>).</p>
+  <h2>Start the app</h2>
+  <p>From the same folder:</p>
+  <p><strong>Windows:</strong> <code>launch.bat</code> or <code>.\launch.ps1</code></p>
+  <p><strong>macOS / Linux:</strong> <code>./launch.sh</code></p>
+  <p>Open <strong>http://127.0.0.1:5173</strong>.</p>
 
   <hr />
 
   <h2>More detail</h2>
-  <p>Full setup when cloning the monorepo: <code>README.md</code> at the repository root. Production builds, API proxy options, data and API keys, and private-repository notes: <code>PredictionMarketApp/README.md</code> in the same repository.</p>
+  <p>Monorepo overview: <code>README.md</code> at the repository root. Developers (production build, API proxy, data): <code>PredictionMarketApp/README.md</code>.</p>
 </body>
 </html>
