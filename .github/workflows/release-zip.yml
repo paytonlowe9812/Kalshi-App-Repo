@@ -1,0 +1,71 @@
+# Three distinct release assets (GitHub may drop duplicate-byte uploads):
+#   PredictionMarketApp-Windows.zip
+#   PredictionMarketApp-macOS.tar.gz
+#   PredictionMarketApp-Linux.tar.gz
+# Each archive adds a one-line file .release-platform (windows | macOS | linux) so checksums differ.
+# GitHub also always lists "Source code (zip)" and "Source code (tar.gz)" — those are automatic, not these.
+
+name: Release source archives (Windows / macOS / Linux)
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  attach-archives:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build OS-labeled archives
+        run: |
+          set -eux
+          VERSION="${GITHUB_REF_NAME}"
+          PREFIX="PredictionMarketApp-${VERSION}"
+          WS="${GITHUB_WORKSPACE}"
+
+          # Windows .zip (fresh tree + platform marker so asset is unique)
+          WORK="$(mktemp -d)"
+          git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
+          echo windows > "${WORK}/PredictionMarketApp/.release-platform"
+          (cd "${WORK}" && zip -rq "${WS}/${PREFIX}-Windows.zip" PredictionMarketApp)
+          cp "${WS}/${PREFIX}-Windows.zip" "${WS}/PredictionMarketApp-Windows.zip"
+          rm -rf "${WORK}"
+
+          # macOS .tar.gz
+          WORK="$(mktemp -d)"
+          git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
+          echo macOS > "${WORK}/PredictionMarketApp/.release-platform"
+          (cd "${WORK}" && tar -czf "${WS}/${PREFIX}-macOS.tar.gz" PredictionMarketApp)
+          cp "${WS}/${PREFIX}-macOS.tar.gz" "${WS}/PredictionMarketApp-macOS.tar.gz"
+          rm -rf "${WORK}"
+
+          # Linux .tar.gz
+          WORK="$(mktemp -d)"
+          git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
+          echo linux > "${WORK}/PredictionMarketApp/.release-platform"
+          (cd "${WORK}" && tar -czf "${WS}/${PREFIX}-Linux.tar.gz" PredictionMarketApp)
+          cp "${WS}/${PREFIX}-Linux.tar.gz" "${WS}/PredictionMarketApp-Linux.tar.gz"
+          rm -rf "${WORK}"
+
+          ls -la "${WS}/${PREFIX}"-*.zip "${WS}/${PREFIX}"-*.tar.gz \
+            "${WS}/PredictionMarketApp-Windows.zip" \
+            "${WS}/PredictionMarketApp-macOS.tar.gz" \
+            "${WS}/PredictionMarketApp-Linux.tar.gz"
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe
+        with:
+          files: |
+            PredictionMarketApp-Windows.zip
+            PredictionMarketApp-macOS.tar.gz
+            PredictionMarketApp-Linux.tar.gz
+            PredictionMarketApp-*-Windows.zip
+            PredictionMarketApp-*-macOS.tar.gz
+            PredictionMarketApp-*-Linux.tar.gz
+          generate_release_notes: true

@@ -1,0 +1,35 @@
+# Artifact: PredictionMarketApp subtree as ZIP (folder prefix preserved).
+
+name: Main branch ZIP artifact
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'PredictionMarketApp/**'
+      - '.github/workflows/main-branch-zip.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zip-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create ZIP from PredictionMarketApp subtree
+        run: |
+          git archive --format=zip --output=PredictionMarketApp-main.zip HEAD PredictionMarketApp
+          ls -la PredictionMarketApp-main.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PredictionMarketApp-main
+          path: PredictionMarketApp-main.zip
+          if-no-files-found: error
+          retention-days: 90
