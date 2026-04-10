@@ -1,35 +1,17 @@
 # Install from a public download
 
-**Primary install guide:** **[README.md](../README.md)** at the repository root (monorepo paths and full setup). This file is a shorter handout with shareable links and the same dependency/run commands from the **PredictionMarketApp/** folder.
+**Primary install guide:** **[README.md](../README.md)** at the repository root (monorepo paths and full setup). This file repeats the dependency and run commands for the **PredictionMarketApp/** folder only.
 
 These steps work for **anyone** with a normal browser. No GitHub account is needed as long as the repository is **Public**.
 
-**Maintainers:** Replace `YOUR-GITHUB-USERNAME` with your GitHub user or organization (for example `octocat`). Replace `YOUR-REPO-NAME` with this **GitHub repository name** (for `github.com/you/Kalshi-App-Repo`, use `Kalshi-App-Repo` — not the `PredictionMarketApp` folder name). If your default branch is not `main`, change `main` in the download URLs.
-
----
-
-## Shareable links
-
-Send people **one** of these:
-
-| What | Link |
-|------|------|
-| **Full install guide** (markdown at repo root) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/README.md` |
-| **This install guide** (GitHub Pages site) | `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/` |
-| **This file** (short markdown in repo) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
-| **Download latest source** (`main` branch, always current) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/archive/refs/heads/main.zip` |
-| **Release — Windows** (`.zip`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Windows.zip` |
-| **Release — macOS** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-macOS.tar.gz` |
-| **Release — Linux** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Linux.tar.gz` |
-
-**Branch ZIP** and **release** archives contain the same tracked files as a `git clone` (no `node_modules`, no `.venv`, no database). Release archives are offered as `.zip` (Windows) and `.tar.gz` (macOS/Linux).
+**Download the app:** on GitHub open **Releases**, choose **Latest**, and download **`PredictionMarketApp-Windows.zip`**, **`PredictionMarketApp-macOS.tar.gz`**, or **`PredictionMarketApp-Linux.tar.gz`** (created when a maintainer pushes a version tag). Release archives match a `git clone` of the app tree (no `node_modules`, no `.venv`, no database).
 
 ### GitHub Pages (maintainers)
 
-To serve the styled install page at `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/`:
+To serve this page as a styled site:
 
 1. **Settings** → **Pages** → **Build and deployment** → set **Source** to **GitHub Actions**.
-2. Ensure **`.github/workflows/pages.yml` exists at the repository root** (for this monorepo it lives next to `PredictionMarketApp/`, not inside it). Push to `main`, or open **Actions** → **Deploy Pages** → **Run workflow**.
+2. **`.github/workflows/pages.yml`** must exist at the **repository root** (next to `PredictionMarketApp/`). Push to `main`, or open **Actions** → **Deploy Pages** → **Run workflow**.
 
 ---
 
@@ -43,7 +25,7 @@ To serve the styled install page at `https://YOUR-GITHUB-USERNAME.github.io/YOUR
    git push origin v1.0.0
    ```
 
-   The workflow attaches **Windows** (`.zip`), **macOS** (`.tar.gz`), and **Linux** (`.tar.gz`) archives. The `releases/latest/download/...` URLs above always point at the newest release. Each download includes a small **`PredictionMarketApp/.release-platform`** file (one line) so all three assets upload reliably; you may delete it after unpacking.
+   The workflow attaches **Windows** (`.zip`), **macOS** (`.tar.gz`), and **Linux** (`.tar.gz`) archives under **Latest** on the **Releases** page. Each download includes a small **`PredictionMarketApp/.release-platform`** file (one line) so all three assets upload reliably; you may delete it after unpacking.
 
 ---
 

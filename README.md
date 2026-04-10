@@ -8,19 +8,9 @@
 
 Optional: a **virtual environment** for Python.
 
-### Shareable links (replace `YOUR-GITHUB-USERNAME` and `YOUR-REPO-NAME`)
+### Downloads
 
-| Purpose | URL |
-|--------|-----|
-| **This install guide** (markdown at repo root) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/README.md` |
-| Install page (**GitHub Pages**, styled) | `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/` |
-| Condensed install (markdown under app folder) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
-| Direct ZIP of latest `main` | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/archive/refs/heads/main.zip` |
-| **Latest release — Windows** (`.zip`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Windows.zip` |
-| **Latest release — macOS** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-macOS.tar.gz` |
-| **Latest release — Linux** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Linux.tar.gz` |
-
-For anonymous public downloads, the repository must be **Public**. Enable **Settings → Pages → Source: GitHub Actions** for the Pages URL; workflow: **`.github/workflows/pages.yml`**.
+For a **public** repository, share the GitHub **Releases** page: open **Latest** and download the archive for each platform — **`PredictionMarketApp-Windows.zip`**, **`PredictionMarketApp-macOS.tar.gz`**, or **`PredictionMarketApp-Linux.tar.gz`**. Those assets are created when you push a version tag (for example `v1.0.0`); see **`.github/workflows/release-zip.yml`** at the repository root.
 
 ### Get the code
 
@@ -144,4 +134,4 @@ The app stores SQLite under **`PredictionMarketApp/data/`**. That directory is g
 
 ### More detail
 
-Feature overview, private-repo download notes, and extra context: **[PredictionMarketApp/README.md](PredictionMarketApp/README.md)**. Shorter duplicate with shareable links only: **[PredictionMarketApp/INSTALL.md](PredictionMarketApp/INSTALL.md)**.
+Feature overview, private-repo download notes, and extra context: **[PredictionMarketApp/README.md](PredictionMarketApp/README.md)**. Shorter install handout: **[PredictionMarketApp/INSTALL.md](PredictionMarketApp/INSTALL.md)**.

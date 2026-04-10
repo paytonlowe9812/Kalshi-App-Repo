@@ -23,6 +23,17 @@ frontend/node_modules/
 # Cursor IDE (local rules, MCP, agent metadata — do not publish)
 .cursor/
 
+# Claude / local AI tooling
+.claude/
+
+# Generated locally by: python scripts/generate_launchers.py
+launch.ps1
+launch.bat
+launch.sh
+
+# Present only in GitHub release downloads (platform marker)
+.release-platform
+
 # JetBrains
 .idea/
 

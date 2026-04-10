@@ -2,29 +2,17 @@
 
 Local web app with a FastAPI backend and a React (Vite) frontend for building and running trading bots against Kalshi. The UI talks to the API over `/api`; in development the Vite dev server proxies those requests to the backend.
 
-**Installation (clone, ZIP, dependencies, run):** use the repository root **[README.md](../README.md)**. The sections below add shareable URLs, ZIP/release options, and deeper notes.
+**Installation (clone, ZIP, dependencies, run):** use the repository root **[README.md](../README.md)**. The sections below cover download options and deeper notes.
 
-## Public install (share one link)
+## Distribution and releases
 
-To let **anyone** download and install **without a GitHub account**, the repository must be **Public** (GitHub: **Settings → General → Danger zone → Change visibility**).
+To let **anyone** download **without signing in**, keep the repository **Public** (GitHub: **Settings → General → Danger zone → Change visibility**).
 
-**Share any of these** (replace `YOUR-GITHUB-USERNAME` and `YOUR-REPO-NAME` — for `github.com/you/Kalshi-App-Repo`, the repo name is `Kalshi-App-Repo`):
+**Releases** (after you push a version tag such as `v1.0.0`) include three platform archives of this app: **`PredictionMarketApp-Windows.zip`**, **`PredictionMarketApp-macOS.tar.gz`**, and **`PredictionMarketApp-Linux.tar.gz`**. They are built by **`.github/workflows/release-zip.yml`** at the repository root (next to the `PredictionMarketApp` folder). Point people at **Releases** then **Latest** on GitHub.
 
-| Purpose | URL |
-|--------|-----|
-| Install page (**GitHub Pages**, styled) | `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/` |
-| Install guide (markdown at repo root) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/README.md` |
-| Short install (markdown in this folder) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
-| Direct ZIP of latest `main` | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/archive/refs/heads/main.zip` |
-| **Latest release — Windows** (`.zip`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Windows.zip` |
-| **Latest release — macOS** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-macOS.tar.gz` |
-| **Latest release — Linux** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Linux.tar.gz` |
+Optional: enable **Settings → Pages → Source: GitHub Actions** to host this install page from `docs/index.html` (see root `.github/workflows/pages.yml`).
 
-The **release** link works after you push at least one version tag (for example `v1.0.0`). If the app lives inside a monorepo, workflows are in the **repository root** [`.github/workflows/`](../.github/workflows/) (next to the `PredictionMarketApp` folder).
-
-**Pages:** enable **Settings → Pages → Source: GitHub Actions**, then run **Deploy Pages** (see root `.github/workflows/pages.yml`).
-
-The same instructions live in **[INSTALL.md](INSTALL.md)** and **[docs/index.html](docs/index.html)**.
+The same install steps appear in **[INSTALL.md](INSTALL.md)** and **[docs/index.html](docs/index.html)**.
 
 ## Requirements
 
@@ -59,7 +47,7 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The workflow in the repository root `.github/workflows/release-zip.yml` builds those archives automatically. For a **public** repo, anyone can download without logging in. Others can open the **Releases** page or follow **[INSTALL.md](INSTALL.md)**.
+The workflow in the repository root `.github/workflows/release-zip.yml` builds those archives automatically. For a **public** repo, anyone can download from **Releases** without logging in.
 
 ### Option C: ZIP from GitHub Actions (every push to `main`)
 
@@ -70,7 +58,7 @@ Each successful push to **`main`** (under `PredictionMarketApp/`) runs the repos
 3. Open the latest successful run.
 4. Scroll to **Artifacts** and download **PredictionMarketApp-main**.
 
-Artifacts are stored for **90 days** (`retention-days` in the workflow), after which GitHub deletes them. This is useful for testers who want the latest `main` without using Git. Downloading artifacts usually requires a **GitHub login**; for anonymous public downloads use the **[INSTALL.md](INSTALL.md)** links (branch archive or release ZIP) instead.
+Artifacts are stored for **90 days** (`retention-days` in the workflow), after which GitHub deletes them. This is useful for testers who want the latest `main` without using Git. Downloading artifacts usually requires a **GitHub login**; for anonymous public installs use **Releases** instead.
 
 ### Private repositories
 
