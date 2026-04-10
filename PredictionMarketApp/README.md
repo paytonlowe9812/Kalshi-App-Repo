@@ -18,7 +18,7 @@ The installers create **`.venv/`**, install **`requirements.txt`**, run **`npm i
 
 ## Distribution (maintainers)
 
-For installs without signing in, keep the repo **Public**. Every push to **`main`** runs **`.github/workflows/release-zip.yml`** at the monorepo root: it publishes **`PredictionMarketApp-latest-Windows.zip`**, **`PredictionMarketApp-latest-macOS.tar.gz`**, and **`PredictionMarketApp-latest-Linux.tar.gz`** on a single rolling **Latest** release (tag **`latest`**). GitHub Pages for **`docs/index.html`** deploys on **`PredictionMarketApp/**`** changes: **`.github/workflows/pages.yml`**.
+For installs without signing in, keep the repo **Public**. Every push to **`main`** runs **`.github/workflows/release-zip.yml`** at the monorepo root: it publishes **`PredictionMarketApp-latest-Windows.zip`**, **`PredictionMarketApp-latest-macOS.tar.gz`**, and **`PredictionMarketApp-latest-Linux.tar.gz`** on a single rolling **Latest** release (tag **`latest`**). Those archives omit **`launch.ps1`**, **`launch.bat`**, and **`launch.sh`** (via **`export-ignore`**); run **`install.*`** or **`python scripts/generate_launchers.py`** after unpacking. GitHub Pages for **`docs/index.html`** deploys on **`PredictionMarketApp/**`** changes: **`.github/workflows/pages.yml`**.
 
 ## Requirements
 

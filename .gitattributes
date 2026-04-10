@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Omit from `git archive` (GitHub Release ZIPs/tarballs); use install.* or generate_launchers.py locally.
+PredictionMarketApp/launch.ps1 export-ignore
+PredictionMarketApp/launch.bat export-ignore
+PredictionMarketApp/launch.sh export-ignore
