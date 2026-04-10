@@ -2,6 +2,8 @@
 
 Local web app with a FastAPI backend and a React (Vite) frontend for building and running trading bots against Kalshi. The UI talks to the API over `/api`; in development the Vite dev server proxies those requests to the backend.
 
+**Installation (clone, ZIP, dependencies, run):** use the repository root **[README.md](../README.md)**. The sections below add shareable URLs, ZIP/release options, and deeper notes.
+
 ## Public install (share one link)
 
 To let **anyone** download and install **without a GitHub account**, the repository must be **Public** (GitHub: **Settings → General → Danger zone → Change visibility**).
@@ -11,9 +13,12 @@ To let **anyone** download and install **without a GitHub account**, the reposit
 | Purpose | URL |
 |--------|-----|
 | Install page (**GitHub Pages**, styled) | `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/` |
-| Install guide (markdown in repo) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
+| Install guide (markdown at repo root) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/README.md` |
+| Short install (markdown in this folder) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
 | Direct ZIP of latest `main` | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/archive/refs/heads/main.zip` |
-| Direct ZIP of **latest release** | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp.zip` |
+| **Latest release — Windows** (`.zip`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Windows.zip` |
+| **Latest release — macOS** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-macOS.tar.gz` |
+| **Latest release — Linux** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Linux.tar.gz` |
 
 The **release** link works after you push at least one version tag (for example `v1.0.0`). If the app lives inside a monorepo, workflows are in the **repository root** [`.github/workflows/`](../.github/workflows/) (next to the `PredictionMarketApp` folder).
 
@@ -45,7 +50,7 @@ This ZIP only includes files tracked in Git (no `node_modules`, `.venv`, or data
 
 ### Option B: Versioned ZIP from Releases
 
-If this repository uses [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases), each tagged version (for example `v1.0.0`) gets **`PredictionMarketApp-v1.0.0.zip`** plus a stable **`PredictionMarketApp.zip`** (same contents) attached to the release.
+If this repository uses [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases), each tagged version (for example `v1.0.0`) gets **three** archives of the `PredictionMarketApp` source tree: **Windows** (`.zip`), **macOS** (`.tar.gz`), and **Linux** (`.tar.gz`). Stable names (`PredictionMarketApp-Windows.zip`, `PredictionMarketApp-macOS.tar.gz`, `PredictionMarketApp-Linux.tar.gz`) are attached so **`releases/latest/download/...`** always points at the newest release. Each archive includes a one-line file **`PredictionMarketApp/.release-platform`** (`windows`, `macOS`, or `linux`) so GitHub does not drop a duplicate; you can delete that file after extracting.
 
 Maintainers create a release by pushing a tag:
 
@@ -54,7 +59,7 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The workflow in the repository root `.github/workflows/release-zip.yml` builds those ZIPs automatically. For a **public** repo, anyone can use **`/releases/latest/download/PredictionMarketApp.zip`** without logging in. Others can open the **Releases** page or follow **[INSTALL.md](INSTALL.md)**.
+The workflow in the repository root `.github/workflows/release-zip.yml` builds those archives automatically. For a **public** repo, anyone can download without logging in. Others can open the **Releases** page or follow **[INSTALL.md](INSTALL.md)**.
 
 ### Option C: ZIP from GitHub Actions (every push to `main`)
 
@@ -108,12 +113,7 @@ Use a short-lived token, revoke it when no longer needed, and never paste tokens
 
 ## Clone the repository
 
-If you use Git:
-
-```bash
-git clone <your-repo-url>
-cd PredictionMarketApp
-```
+If you use Git, clone the repo then **`cd PredictionMarketApp`** (monorepo) so this folder is your shell cwd. Full steps: **[README.md](../README.md)**.
 
 ## Install dependencies
 
@@ -230,7 +230,7 @@ Do not commit `data/*.db` or share database files publicly.
 
 ## Repository hygiene
 
-- **`.cursor/`** and similar editor-only paths are ignored so local Cursor rules and agent metadata are not published. If you previously committed `.cursor/`, remove it from the index once: `git rm -r --cached .cursor` then commit.
+- **`.cursor/`** and **`.claude/`** are ignored so local editor metadata is not published. If you previously committed them, remove from the index at the appropriate path (repo root vs app folder): `git rm -r --cached .cursor` or `git rm -r --cached .claude`, then commit.
 - Keep using a virtual environment and do not commit **`.venv/`** or **`frontend/node_modules/`**.
 
 ## License

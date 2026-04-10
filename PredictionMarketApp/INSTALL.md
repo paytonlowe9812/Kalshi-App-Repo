@@ -1,5 +1,7 @@
 # Install from a public download
 
+**Primary install guide:** **[README.md](../README.md)** at the repository root (monorepo paths and full setup). This file is a shorter handout with shareable links and the same dependency/run commands from the **PredictionMarketApp/** folder.
+
 These steps work for **anyone** with a normal browser. No GitHub account is needed as long as the repository is **Public**.
 
 **Maintainers:** Replace `YOUR-GITHUB-USERNAME` with your GitHub user or organization (for example `octocat`). Replace `YOUR-REPO-NAME` with this **GitHub repository name** (for `github.com/you/Kalshi-App-Repo`, use `Kalshi-App-Repo` — not the `PredictionMarketApp` folder name). If your default branch is not `main`, change `main` in the download URLs.
@@ -12,12 +14,15 @@ Send people **one** of these:
 
 | What | Link |
 |------|------|
+| **Full install guide** (markdown at repo root) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/README.md` |
 | **This install guide** (GitHub Pages site) | `https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/` |
-| **This install guide** (markdown in repo) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
+| **This file** (short markdown in repo) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md` |
 | **Download latest source** (`main` branch, always current) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/archive/refs/heads/main.zip` |
-| **Download latest release** (app subtree; after first version tag) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp.zip` |
+| **Release — Windows** (`.zip`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Windows.zip` |
+| **Release — macOS** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-macOS.tar.gz` |
+| **Release — Linux** (`.tar.gz`) | `https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Linux.tar.gz` |
 
-The **source** and **release** ZIPs contain the same tracked files as a `git clone` (no `node_modules`, no `.venv`, no database).
+**Branch ZIP** and **release** archives contain the same tracked files as a `git clone` (no `node_modules`, no `.venv`, no database). Release archives are offered as `.zip` (Windows) and `.tar.gz` (macOS/Linux).
 
 ### GitHub Pages (maintainers)
 
@@ -38,7 +43,7 @@ To serve the styled install page at `https://YOUR-GITHUB-USERNAME.github.io/YOUR
    git push origin v1.0.0
    ```
 
-   The workflow attaches `PredictionMarketApp.zip` to that release. After that, `releases/latest/download/PredictionMarketApp.zip` always points at the newest release.
+   The workflow attaches **Windows** (`.zip`), **macOS** (`.tar.gz`), and **Linux** (`.tar.gz`) archives. The `releases/latest/download/...` URLs above always point at the newest release. Each download includes a small **`PredictionMarketApp/.release-platform`** file (one line) so all three assets upload reliably; you may delete it after unpacking.
 
 ---
 
@@ -47,7 +52,7 @@ To serve the styled install page at `https://YOUR-GITHUB-USERNAME.github.io/YOUR
 1. Unzip the file.
 2. Open the folder that contains **`backend`**, **`frontend`**, and **`requirements.txt`** (the **project root** for install commands).
    - If you downloaded the **full repository** ZIP, you may see a top folder like `Kalshi-App-Repo-main`, then open **`PredictionMarketApp`** inside it.
-   - If you downloaded the **release** ZIP (`PredictionMarketApp.zip`), paths inside the archive usually start with **`PredictionMarketApp/`** — open that folder (or use it as the root if your unzipper flattens one level).
+   - If you downloaded a **release** archive (`.zip` on Windows, `.tar.gz` on macOS/Linux), extract it, then open the **`PredictionMarketApp`** folder inside (that is the project root).
    - GitHub sometimes names archives `…-main`; that is fine.
 
 ### What you need installed
@@ -112,4 +117,4 @@ On **Windows**, run **`.\launch.ps1`** or **`launch.bat`** (after **`npm install
 
 ## More detail
 
-See **[README.md](README.md)** for production builds, API proxy options, data and API keys, and private-repository downloads.
+See the repository root **[README.md](../README.md)** for the canonical install walkthrough, and **[README.md](README.md)** in this folder for production builds, API proxy options, data and API keys, and private-repository downloads.

@@ -113,7 +113,11 @@
         <td><code>https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/</code></td>
       </tr>
       <tr>
-        <td><strong>Install guide</strong> on GitHub</td>
+        <td><strong>Full install guide</strong> on GitHub (repo root)</td>
+        <td><code>https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/README.md</code></td>
+      </tr>
+      <tr>
+        <td><strong>Short install</strong> on GitHub</td>
         <td><code>https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/INSTALL.md</code></td>
       </tr>
       <tr>
@@ -121,8 +125,16 @@
         <td><code>https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/archive/refs/heads/main.zip</code></td>
       </tr>
       <tr>
-        <td><strong>Download latest release</strong> (after first version tag)</td>
-        <td><code>https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp.zip</code></td>
+        <td><strong>Release — Windows</strong> (<code>.zip</code>)</td>
+        <td><code>https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Windows.zip</code></td>
+      </tr>
+      <tr>
+        <td><strong>Release — macOS</strong> (<code>.tar.gz</code>)</td>
+        <td><code>https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-macOS.tar.gz</code></td>
+      </tr>
+      <tr>
+        <td><strong>Release — Linux</strong> (<code>.tar.gz</code>)</td>
+        <td><code>https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/releases/latest/download/PredictionMarketApp-Linux.tar.gz</code></td>
       </tr>
     </tbody>
   </table>
@@ -145,7 +157,7 @@
     <li>Push a version tag once so the <strong>latest release</strong> link works, for example:
       <pre><code>git tag v1.0.0
 git push origin v1.0.0</code></pre>
-      The release workflow attaches <code>PredictionMarketApp.zip</code>. After that, <code>releases/latest/download/PredictionMarketApp.zip</code> always points at the newest release.
+      The release workflow attaches Windows (<code>.zip</code>), macOS (<code>.tar.gz</code>), and Linux (<code>.tar.gz</code>) archives. Each includes a one-line <code>PredictionMarketApp/.release-platform</code> file so GitHub keeps all three downloads. GitHub also adds <strong>Source code (zip)</strong> and <strong>Source code (tar.gz)</strong> automatically on every release (full repo snapshot, not the same as these three).
     </li>
   </ol>
 
@@ -201,6 +213,6 @@ npm run dev</code></pre>
   <hr />
 
   <h2>More detail</h2>
-  <p>See the full <a href="https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/README.md">README.md</a> on GitHub for production builds, API proxy options, data and API keys, and private-repository downloads (replace placeholders in the URL).</p>
+  <p>Canonical monorepo install steps: <a href="https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/README.md">README.md</a> at the repository root. For production builds, API proxy options, data and API keys, and private-repository downloads, see <a href="https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME/blob/main/PredictionMarketApp/README.md">PredictionMarketApp/README.md</a> (replace placeholders in the URLs).</p>
 </body>
 </html>
