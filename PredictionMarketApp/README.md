@@ -18,7 +18,7 @@ The installers create **`.venv/`**, install **`requirements.txt`**, run **`npm i
 
 ## Distribution (maintainers)
 
-For installs without signing in, keep the repo **Public**. Every push to **`main`** runs **`.github/workflows/release-zip.yml`** at the monorepo root: it rebuilds **`PredictionMarketApp-Windows.zip`**, **`PredictionMarketApp-macOS.tar.gz`**, and **`PredictionMarketApp-Linux.tar.gz`** and publishes them on a single rolling **Latest** release (tag **`latest`**). GitHub Pages for **`docs/index.html`** deploys on **`PredictionMarketApp/**`** changes: **`.github/workflows/pages.yml`**.
+For installs without signing in, keep the repo **Public**. Every push to **`main`** runs **`.github/workflows/release-zip.yml`** at the monorepo root: it publishes **`PredictionMarketApp-latest-Windows.zip`**, **`PredictionMarketApp-latest-macOS.tar.gz`**, and **`PredictionMarketApp-latest-Linux.tar.gz`** on a single rolling **Latest** release (tag **`latest`**). GitHub Pages for **`docs/index.html`** deploys on **`PredictionMarketApp/**`** changes: **`.github/workflows/pages.yml`**.
 
 ## Requirements
 

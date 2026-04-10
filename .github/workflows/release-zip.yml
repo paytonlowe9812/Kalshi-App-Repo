@@ -1,10 +1,10 @@
 # Single rolling release: tag `latest`, name "Latest".
 # Rebuilds platform archives on every push to `main` and replaces all previous releases.
 #
-# Assets (stable names for releases/latest/download/...):
-#   PredictionMarketApp-Windows.zip
-#   PredictionMarketApp-macOS.tar.gz
-#   PredictionMarketApp-Linux.tar.gz
+# Assets (exact names on the Latest release):
+#   PredictionMarketApp-latest-Windows.zip
+#   PredictionMarketApp-latest-macOS.tar.gz
+#   PredictionMarketApp-latest-Linux.tar.gz
 # Each archive adds .release-platform (windows | macOS | linux) so GitHub keeps all three.
 
 name: Release source archives (Windows / macOS / Linux)
@@ -42,35 +42,28 @@ jobs:
       - name: Build OS-labeled archives
         run: |
           set -eux
-          VERSION="latest"
-          PREFIX="PredictionMarketApp-${VERSION}"
+          PREFIX="PredictionMarketApp-latest"
           WS="${GITHUB_WORKSPACE}"
 
           WORK="$(mktemp -d)"
           git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
           echo windows > "${WORK}/PredictionMarketApp/.release-platform"
           (cd "${WORK}" && zip -rq "${WS}/${PREFIX}-Windows.zip" PredictionMarketApp)
-          cp "${WS}/${PREFIX}-Windows.zip" "${WS}/PredictionMarketApp-Windows.zip"
           rm -rf "${WORK}"
 
           WORK="$(mktemp -d)"
           git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
           echo macOS > "${WORK}/PredictionMarketApp/.release-platform"
           (cd "${WORK}" && tar -czf "${WS}/${PREFIX}-macOS.tar.gz" PredictionMarketApp)
-          cp "${WS}/${PREFIX}-macOS.tar.gz" "${WS}/PredictionMarketApp-macOS.tar.gz"
           rm -rf "${WORK}"
 
           WORK="$(mktemp -d)"
           git archive HEAD PredictionMarketApp | tar -x -C "${WORK}"
           echo linux > "${WORK}/PredictionMarketApp/.release-platform"
           (cd "${WORK}" && tar -czf "${WS}/${PREFIX}-Linux.tar.gz" PredictionMarketApp)
-          cp "${WS}/${PREFIX}-Linux.tar.gz" "${WS}/PredictionMarketApp-Linux.tar.gz"
           rm -rf "${WORK}"
 
-          ls -la "${WS}/${PREFIX}"-*.zip "${WS}/${PREFIX}"-*.tar.gz \
-            "${WS}/PredictionMarketApp-Windows.zip" \
-            "${WS}/PredictionMarketApp-macOS.tar.gz" \
-            "${WS}/PredictionMarketApp-Linux.tar.gz"
+          ls -la "${WS}/${PREFIX}"-*.zip "${WS}/${PREFIX}"-*.tar.gz
 
       - name: Publish Latest release
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe
@@ -80,13 +73,12 @@ jobs:
           target_commitish: ${{ github.sha }}
           body: |
             Rolling build from `main` at [`${{ github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}).
+
+            **Downloads:** `PredictionMarketApp-latest-Windows.zip`, `PredictionMarketApp-latest-macOS.tar.gz`, `PredictionMarketApp-latest-Linux.tar.gz` (also under **Assets**).
           files: |
-            PredictionMarketApp-Windows.zip
-            PredictionMarketApp-macOS.tar.gz
-            PredictionMarketApp-Linux.tar.gz
-            PredictionMarketApp-*-Windows.zip
-            PredictionMarketApp-*-macOS.tar.gz
-            PredictionMarketApp-*-Linux.tar.gz
+            PredictionMarketApp-latest-Windows.zip
+            PredictionMarketApp-latest-macOS.tar.gz
+            PredictionMarketApp-latest-Linux.tar.gz
           draft: false
           prerelease: false
           make_latest: true
