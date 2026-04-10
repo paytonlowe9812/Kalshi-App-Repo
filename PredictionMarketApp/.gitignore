@@ -1,0 +1,18 @@
+# SQLite stores API keys (PEM), key IDs, bots, rules, and logs -- do not commit or share
+data/app.db
+data/*.db
+
+# Python virtual environment
+.venv/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Frontend (reinstall with npm install / ./install.sh)
+frontend/node_modules/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
