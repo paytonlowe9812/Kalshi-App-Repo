@@ -1,0 +1,4 @@
+{
+  "summary": "Continued bot-editor map: live execution is executor.py resolve_all -> evaluator.evaluate -> actions.execute against DB rules. Simulator uses POST /api/simulator/run with the same rule-walk logic (routers/simulator.py) and shows steps in SimulatorPanel. RuleEditor keeps simResults state for RuleLine highlighting but setSimResults is never called, so sim highlights in the rule list are unused unless wired later.",
+  "current_status": "Familiarization complete; no code changes. Optional follow-up: connect simulator steps to RuleEditor setSimResults by line_number for inline hit/skipped display."
+}

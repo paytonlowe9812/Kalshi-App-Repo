@@ -13,21 +13,20 @@ export default function VarsPanel() {
   const { activeBotId } = useAppStore();
   const [payload, setPayload] = useState(null);
   const [err, setErr] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const seq = useRef(0);
 
   useEffect(() => {
-    if (!activeBotId) {
-      setPayload(null);
-      setErr(null);
-      return undefined;
-    }
     let cancelled = false;
+    const url = activeBotId
+      ? `/api/bots/${activeBotId}/live-variables`
+      : '/api/live-variables';
+
     const tick = async () => {
       const my = ++seq.current;
       setLoading(true);
       try {
-        const res = await fetch(`/api/bots/${activeBotId}/live-variables`);
+        const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const j = await res.json();
         if (cancelled || my !== seq.current) return;
@@ -39,6 +38,7 @@ export default function VarsPanel() {
         if (!cancelled && my === seq.current) setLoading(false);
       }
     };
+
     tick();
     const id = setInterval(tick, POLL_MS);
     return () => {
@@ -47,26 +47,27 @@ export default function VarsPanel() {
     };
   }, [activeBotId]);
 
-  if (!activeBotId) {
-    return (
-      <div className="flex items-center justify-center h-full text-terminal-amber-dim text-xs font-mono px-4 text-center">
-        SELECT A BOT ON THE BOTS TAB TO VIEW LIVE VARIABLES.
-      </div>
-    );
-  }
-
   const vars = payload?.variables || {};
   const rows = Object.entries(vars).sort(([a], [b]) => a.localeCompare(b));
+  const scope = payload?.scope || (activeBotId ? 'bot' : 'global');
+  const showEmptyTable = rows.length === 0 && !err && !loading;
 
   return (
     <div className="h-full flex flex-col min-h-0">
       <div className="w-full max-w-3xl mx-auto px-3 md:px-4 py-2 border-b border-terminal-border-dim flex flex-wrap items-center gap-2">
         <h2 className="panel-header">LIVE VARIABLES</h2>
         <span className="text-[9px] font-mono text-terminal-amber-dim">
-          bot #{activeBotId} | {POLL_MS}ms
+          {activeBotId ? `bot #${activeBotId}` : 'global'}
+          {' '}
+          | {POLL_MS}ms
         </span>
         {loading && <span className="text-[9px] font-mono text-terminal-amber-muted">sync</span>}
       </div>
+      {!activeBotId && (
+        <div className="max-w-3xl mx-auto px-3 md:px-4 mt-2 text-[10px] font-mono text-terminal-amber-dim leading-snug">
+          Index aggregates and daily P&L (no bot required). Select a bot on BOTS to also load that market, position, resting orders, user vars, and trend fields.
+        </div>
+      )}
       {payload && !payload.kalshi_client_configured && (
         <div className="max-w-3xl mx-auto px-3 md:px-4 mt-2 text-[10px] font-mono text-terminal-amber border border-terminal-amber/40 px-2 py-1.5 leading-snug">
           No active Kalshi API key. Open CONFIG, add or activate a key so REST market data can load (WebSocket also uses it).
@@ -94,12 +95,13 @@ export default function VarsPanel() {
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && !err && (
+        {showEmptyTable && (
           <p className="text-xs text-terminal-amber-dim font-mono text-center py-8">NO VARIABLES RETURNED</p>
         )}
       </div>
       {payload?.updated_at && (
         <div className="max-w-3xl mx-auto px-3 md:px-4 py-1 border-t border-terminal-border-dim text-[9px] font-mono text-terminal-amber-muted truncate">
+          {scope === 'global' ? 'global · ' : ''}
           {payload.updated_at}
         </div>
       )}

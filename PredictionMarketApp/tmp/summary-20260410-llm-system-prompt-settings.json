@@ -1,0 +1,4 @@
+{
+  "summary": "Added configurable strategy assistant system prompt: settings key strategy_llm_system_prompt stores an optional prefix; empty uses built-in _DEFAULT_STRATEGY_SYSTEM_PREFIX. Server always appends _strategy_system_suffix (current bot, rules JSON, strategy_rules block rules). AppSettings textarea + clear-to-default button under STRATEGY ASSISTANT; saved via existing SAVE ALL CONFIG.",
+  "current_status": "LLM system prompt editable in Config; assistant strategy-chat uses merged prompt."
+}

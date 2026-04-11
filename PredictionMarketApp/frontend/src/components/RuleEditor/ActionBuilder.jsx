@@ -27,6 +27,9 @@ function VarOrNumeric({
   ariaLabel,
   /** Short label before value/var (e.g. Qty, Price) */
   fieldLabel,
+  /** When set, var mode shows a signed cents delta applied after resolving the variable (e.g. LastTraded - 5). */
+  offsetKey,
+  offsetAriaLabel,
   groups,
   loading,
   onUpdateParams,
@@ -46,7 +49,9 @@ function VarOrNumeric({
     onUpdateParams({ [`${paramKey}_mode`]: 'variable', [varKey]: '' });
   };
   const switchToLiteral = () => {
-    onUpdateParams({ [`${paramKey}_mode`]: 'literal', [varKey]: '' });
+    const patch = { [`${paramKey}_mode`]: 'literal', [varKey]: '' };
+    if (offsetKey) patch[offsetKey] = 0;
+    onUpdateParams(patch);
   };
 
   return (
@@ -73,44 +78,72 @@ function VarOrNumeric({
         </button>
       </div>
       {isVarMode ? (
-        varValue ? (
-          <div className="flex items-center gap-1 min-w-0 max-w-[180px]">
-            <span className="text-terminal-amber-bright truncate text-xs font-mono" title={varValue}>
-              {varValue}
-            </span>
-            <button
-              type="button"
-              className="shrink-0 text-[9px] font-mono text-terminal-amber-dim hover:text-terminal-amber border border-terminal-border-dim px-1 py-0"
-              onClick={() => onUpdateParams({ [varKey]: '' })}
-              title="Pick a different variable"
+        <div className="flex items-center gap-1 min-w-0 flex-wrap">
+          {varValue ? (
+            <div className="flex items-center gap-1 min-w-0 max-w-[180px]">
+              <span className="text-terminal-amber-bright truncate text-xs font-mono" title={varValue}>
+                {varValue}
+              </span>
+              <button
+                type="button"
+                className="shrink-0 text-[9px] font-mono text-terminal-amber-dim hover:text-terminal-amber border border-terminal-border-dim px-1 py-0"
+                onClick={() => onUpdateParams({ [varKey]: '' })}
+                title="Pick a different variable"
+              >
+                ×
+              </button>
+            </div>
+          ) : (
+            <select
+              className={`${selectClass} min-w-[7rem] max-w-[180px]`}
+              value=""
+              disabled={loading}
+              onChange={(e) => onUpdateParams({ [varKey]: e.target.value })}
+              aria-label={`${ariaLabel || paramKey} variable`}
             >
-              ×
-            </button>
-          </div>
-        ) : (
-          <select
-            className={`${selectClass} min-w-[7rem] max-w-[180px]`}
-            value=""
-            disabled={loading}
-            onChange={(e) => onUpdateParams({ [varKey]: e.target.value })}
-            aria-label={`${ariaLabel || paramKey} variable`}
-          >
-            <option value="">{loading ? 'Loading…' : 'choose var'}</option>
-            {groups.map((g) => (
-              <optgroup key={`${paramKey}-${g.label}`} label={g.label || 'Variables'}>
-                {(g.vars || []).map((v) => (
-                  <option
-                    key={`${paramKey}-${g.label}-${v.name}`}
-                    value={v.name}
-                    title={[v.ticker, v.desc].filter(Boolean).join(' | ') || v.name}
-                  >
-                    {v.name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        )
+              <option value="">{loading ? 'Loading…' : 'choose var'}</option>
+              {groups.map((g) => (
+                <optgroup key={`${paramKey}-${g.label}`} label={g.label || 'Variables'}>
+                  {(g.vars || []).map((v) => (
+                    <option
+                      key={`${paramKey}-${g.label}-${v.name}`}
+                      value={v.name}
+                      title={[v.ticker, v.desc].filter(Boolean).join(' | ') || v.name}
+                    >
+                      {v.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
+          {offsetKey ? (
+            <div className="flex items-center gap-0.5 shrink-0" title="Added to the variable value (cents). Use negative to subtract (e.g. -5 under LastTraded).">
+              <span className="text-[9px] font-mono text-terminal-amber-dim">+c</span>
+              <input
+                type="number"
+                step={1}
+                className="input-field w-11 text-[11px] font-mono py-0.5 px-1"
+                value={params[offsetKey] === 0 || params[offsetKey] == null ? '' : params[offsetKey]}
+                onChange={(e) => {
+                  const t = e.target.value;
+                  if (t === '' || t === '-') {
+                    onUpdateParams({ [offsetKey]: 0 });
+                    return;
+                  }
+                  const n = parseInt(t, 10);
+                  if (!Number.isNaN(n)) onUpdateParams({ [offsetKey]: n });
+                }}
+                onBlur={() => {
+                  if (params[offsetKey] == null || params[offsetKey] === '' || Number.isNaN(Number(params[offsetKey]))) {
+                    onUpdateParams({ [offsetKey]: 0 });
+                  }
+                }}
+                aria-label={offsetAriaLabel || `${ariaLabel || paramKey} cents offset`}
+              />
+            </div>
+          ) : null}
+        </div>
       ) : (
         <input
           type="number"
@@ -183,7 +216,20 @@ export default function ActionBuilder({ rule, onUpdate }) {
           </select>
           <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} fieldLabel="Qty" ariaLabel="Contract count" {...varProps} />
           <span className="text-terminal-amber-dim">at</span>
-          <VarOrNumeric params={params} paramKey="price" varKey="price_var" fallback={50} isFloat step={1} inputClass="input-field w-14 text-xs py-0.5" fieldLabel="Price" ariaLabel="Limit price (cents)" {...varProps} />
+          <VarOrNumeric
+            params={params}
+            paramKey="price"
+            varKey="price_var"
+            fallback={50}
+            isFloat
+            step={1}
+            inputClass="input-field w-14 text-xs py-0.5"
+            fieldLabel="Price"
+            ariaLabel="Limit price (cents)"
+            offsetKey="price_offset"
+            offsetAriaLabel="Cents to add after variable (negative subtracts)"
+            {...varProps}
+          />
           <span className="text-terminal-amber-dim">cents</span>
         </div>
       );

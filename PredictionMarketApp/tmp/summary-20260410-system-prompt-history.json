@@ -1,0 +1,4 @@
+{
+  "summary": "User asked what the strategy assistant system prompt was before customization: answered that it was one f-string now represented by _DEFAULT_STRATEGY_SYSTEM_PREFIX plus _strategy_system_suffix(bot, rules), cited from assistant.py.",
+  "current_status": "Informational only; no code changes."
+}

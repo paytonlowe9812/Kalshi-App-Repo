@@ -1,0 +1,4 @@
+{
+  "summary": "Added LIMIT price_offset (cents) end-to-end: Action model and evaluator parsing, actions.py applies offset after resolving price_var/price literal then clamps 1-99. ActionBuilder VarOrNumeric supports optional offsetKey; LIMIT price in var mode shows +c input for signed cents (e.g. -5 under LastTraded). Switching price to value clears price_offset. Assistant prompt documents price_var + price_offset.",
+  "current_status": "Feature ready to try in editor: LIMIT, var price, set +c to -5 for last minus five cents."
+}

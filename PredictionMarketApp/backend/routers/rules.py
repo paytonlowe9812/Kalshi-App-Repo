@@ -52,9 +52,15 @@ def create_snapshot(bot_id: int, data: SnapshotCreate):
 
 @router.get("/snapshots")
 def list_snapshots(bot_id: int):
+    """Return all snapshots across all bots so any snapshot can be applied to any bot."""
     db = get_db()
     rows = db.execute(
-        "SELECT id, bot_id, name, created_at FROM snapshots WHERE bot_id = ? ORDER BY created_at DESC",
+        """
+        SELECT s.id, s.bot_id, s.name, s.created_at, b.name AS bot_name
+        FROM snapshots s
+        LEFT JOIN bots b ON b.id = s.bot_id
+        ORDER BY s.bot_id = ? DESC, s.created_at DESC
+        """,
         (bot_id,),
     ).fetchall()
     return [dict(r) for r in rows]
@@ -63,9 +69,10 @@ def list_snapshots(bot_id: int):
 @router.post("/snapshots/{snap_id}/restore")
 def restore_snapshot(bot_id: int, snap_id: int):
     db = get_db()
+    # Allow any snapshot to be applied to any bot (universal snapshots)
     snap = db.execute(
-        "SELECT rules_json FROM snapshots WHERE id = ? AND bot_id = ?",
-        (snap_id, bot_id),
+        "SELECT rules_json FROM snapshots WHERE id = ?",
+        (snap_id,),
     ).fetchone()
     if not snap:
         raise HTTPException(404, "Snapshot not found")
@@ -84,3 +91,14 @@ def restore_snapshot(bot_id: int, snap_id: int):
         )
     db.commit()
     return {"status": "restored"}
+
+
+@router.delete("/snapshots/{snap_id}")
+def delete_snapshot(bot_id: int, snap_id: int):
+    """Remove a saved rule snapshot (any bot; snap_id is global)."""
+    db = get_db()
+    cur = db.execute("DELETE FROM snapshots WHERE id = ?", (snap_id,))
+    db.commit()
+    if cur.rowcount == 0:
+        raise HTTPException(404, "Snapshot not found")
+    return {"status": "deleted"}

@@ -15,17 +15,18 @@ function looksLikeVariable(operand, allNames) {
   return false;
 }
 
-function OperandSide({ label, operandKey, rule, onUpdate, groups, loading, allNames }) {
+function OperandSide({ label, operandKey, rule, onUpdate, groups, loading, allNames, defaultMode = 'variable' }) {
   const value = rule[operandKey];
 
   // Track variable-vs-value mode explicitly so that clearing the number field
   // does NOT jump back to the variable dropdown.
   const [inValueMode, setInValueMode] = useState(() => {
-    // Start in value mode if the stored operand is a plain number (not a var name).
-    return numericish(value) && !allNames.includes(value);
+    if (numericish(value) && !allNames.includes(value)) return true;
+    if (value == null || value === '') return defaultMode === 'value';
+    return false;
   });
 
-  // If the rule is replaced from outside (e.g. snapshot restore or fresh bot load),
+  // If the rule is replaced from outside (e.g. snapshot restore, assistant apply, fresh bot load),
   // sync the mode — but only when allNames has loaded and the value is clearly one or the other.
   useEffect(() => {
     if (loading) return;
@@ -33,6 +34,8 @@ function OperandSide({ label, operandKey, rule, onUpdate, groups, loading, allNa
       setInValueMode(false);
     } else if (numericish(value) && !allNames.includes(value)) {
       setInValueMode(true);
+    } else if (value == null || value === '') {
+      setInValueMode(defaultMode === 'value');
     }
   }, [value, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -170,6 +173,7 @@ export default function ConditionBuilder({ rule, onUpdate }) {
         groups={groups}
         loading={loading}
         allNames={allNames}
+        defaultMode="value"
       />
     </div>
   );

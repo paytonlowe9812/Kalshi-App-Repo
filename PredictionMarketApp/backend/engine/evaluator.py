@@ -37,6 +37,7 @@ def _parse_action(rule: dict) -> Action | None:
         contracts_var=params.get("contracts_var"),
         price=params.get("price"),
         price_var=params.get("price_var"),
+        price_offset=params.get("price_offset"),
         side=params.get("side"),
         var_name=params.get("var_name"),
         value=params.get("value"),

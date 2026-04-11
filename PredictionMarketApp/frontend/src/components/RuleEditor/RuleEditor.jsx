@@ -4,6 +4,8 @@ import RuleToolbar from './RuleToolbar';
 import RuleLine from './RuleLine';
 import SnapshotSidebar from './SnapshotSidebar';
 import MarketPickerTree from './MarketPickerTree';
+import StrategyAssistant from './StrategyAssistant';
+import TrendConfig from './TrendConfig';
 
 function inferSeriesFromMarket(ticker) {
   if (!ticker || typeof ticker !== 'string') return '';
@@ -30,10 +32,13 @@ export default function RuleEditor({ onOpenSimulator }) {
     const data = await res.json();
     setBot(data);
     setBotName(data.name);
+    const CONDITION_TYPES = new Set(['IF', 'AND', 'OR']);
     setRules(
       (data.rules || []).map((r) => ({
         ...r, line_number: r.line_number, line_type: r.line_type,
-        left_operand: r.left_operand, operator: r.operator, right_operand: r.right_operand,
+        left_operand: r.left_operand, operator: r.operator,
+        // Null right_operand on condition lines defaults to '0' so the field opens in value mode
+        right_operand: (r.right_operand == null && CONDITION_TYPES.has(r.line_type)) ? '0' : r.right_operand,
         action_type: r.action_type, action_params: r.action_params,
         group_id: r.group_id, group_logic: r.group_logic, exec_count: r.exec_count || 0,
       })),
@@ -99,6 +104,25 @@ export default function RuleEditor({ onOpenSimulator }) {
   const moveDown = (i) => { if (i >= rules.length - 1) return; const n = [...rules]; [n[i], n[i + 1]] = [n[i + 1], n[i]]; n.forEach((r, j) => r.line_number = j + 1); setRules(n); saveRules(n); };
   const deleteLine = (i) => { const n = rules.filter((_, j) => j !== i); n.forEach((r, j) => r.line_number = j + 1); setRules(n); saveRules(n); };
 
+  const applyAssistantRules = useCallback((suggested) => {
+    const conditionTypes = new Set(['IF', 'AND', 'OR']);
+    const next = suggested.map((r, i) => ({
+      line_number: i + 1,
+      line_type: r.line_type,
+      left_operand: r.left_operand ?? null,
+      operator: r.operator ?? null,
+      // Default null right_operand to '0' so condition lines open in value mode, not variable mode
+      right_operand: r.right_operand != null ? r.right_operand : (conditionTypes.has(r.line_type) ? '0' : null),
+      action_type: r.action_type ?? null,
+      action_params: r.action_params ?? null,
+      group_id: r.group_id ?? null,
+      group_logic: r.group_logic ?? null,
+      exec_count: 0,
+    }));
+    setRules(next);
+    saveRules(next);
+  }, [saveRules]);
+
   const saveBotName = async () => { setEditingName(false); if (botName !== bot.name) { await fetch(`/api/bots/${activeBotId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: botName }) }); } };
   const assignMarket = async (ticker) => { await fetch(`/api/bots/${activeBotId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ market_ticker: ticker }) }); fetchBot(); };
   const clearMarket = async () => { await fetch(`/api/bots/${activeBotId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ market_ticker: '', series_ticker: '', auto_roll: false }) }); fetchBot(); };
@@ -147,8 +171,8 @@ export default function RuleEditor({ onOpenSimulator }) {
   }
 
   return (
-    <div className="h-full flex">
-      <div className="flex-1 flex flex-col min-w-0">
+    <div className="h-full flex min-h-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {isBulk && (
           <div className="border-b border-terminal-amber bg-terminal-amber-faint">
             <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-16 py-1.5 flex items-center gap-2 text-terminal-amber-bright text-[10px] font-mono">
@@ -248,6 +272,11 @@ export default function RuleEditor({ onOpenSimulator }) {
           </div>
           </div>
         </div>
+        <div className="border-b border-terminal-border-dim/50">
+          <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-16">
+            <TrendConfig botId={activeBotId} bot={bot} onSave={fetchBot} />
+          </div>
+        </div>
         <RuleToolbar onAddLine={addLine} onSimulate={onOpenSimulator} onOpenHistory={() => setHistoryOpen(true)} />
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-16 py-1">
@@ -258,6 +287,11 @@ export default function RuleEditor({ onOpenSimulator }) {
           </div>
         </div>
       </div>
+      <StrategyAssistant
+        botId={activeBotId}
+        disabled={isBulk}
+        onApplyRules={applyAssistantRules}
+      />
       <SnapshotSidebar botId={activeBotId} onRestore={fetchBot} open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </div>
   );

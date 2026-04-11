@@ -158,6 +158,11 @@ async def execute(bot_id: int, action: Action, variables: dict):
     elif action.type == "LIMIT":
         contracts = _resolve_int(action.contracts_var, action.contracts, variables, 1, "LIMIT contracts")
         price_cents = _resolve_float(action.price_var, action.price, variables, 50.0, "LIMIT price")
+        try:
+            off = float(action.price_offset) if action.price_offset is not None else 0.0
+        except (TypeError, ValueError):
+            off = 0.0
+        price_cents = price_cents + off
         # UI and Kalshi use cents on the quoted side (1-99), not dollars or basis points.
         api_price = max(1, min(99, int(round(price_cents))))
         lim_side = (action.side or cs).lower()

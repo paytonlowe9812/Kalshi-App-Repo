@@ -1,0 +1,4 @@
+{
+  "summary": "VARS tab: added GET /api/live-variables (live.py) for resolve_global_live_variables (DailyPnL + sentiment indexes); VarsPanel polls global URL when no activeBotId, fixes empty flash by only showing NO VARIABLES when !loading and payload settled, initial loading true. Refactored engine variables.py so resolve_all starts with globals, strips duplicate index/daily blocks, uses normalized ticker string, elif bot fills _BOT_MARKET_KEYS placeholders when no market. Per-bot response includes scope bot.",
+  "current_status": "Global vars always available on VARS; bot view includes globals plus market/position/trend/user vars."
+}

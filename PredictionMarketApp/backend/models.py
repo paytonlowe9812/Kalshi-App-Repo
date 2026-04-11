@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Any, Optional
 
 
 class SettingUpdate(BaseModel):
@@ -8,7 +8,8 @@ class SettingUpdate(BaseModel):
 
 
 class SettingsBulkUpdate(BaseModel):
-    settings: dict[str, str]
+    # Values may be JSON bool/number from clients; settings router coerces to strings for SQLite.
+    settings: dict[str, Any]
 
 
 class ApiKeyCreate(BaseModel):
@@ -54,6 +55,9 @@ class BotUpdate(BaseModel):
     auto_roll: Optional[bool] = None
     series_ticker: Optional[str] = None
     contract_side: Optional[str] = None
+    trend_poll_ms: Optional[int] = None
+    trend_confirm_count: Optional[int] = None
+    trend_price_source: Optional[str] = None
 
 
 class BotMove(BaseModel):
@@ -141,6 +145,8 @@ class Action(BaseModel):
     contracts_var: Optional[str] = None
     price: Optional[float] = None
     price_var: Optional[str] = None
+    # LIMIT: added to resolved limit price (cents), e.g. -5 with price_var LastTraded.
+    price_offset: Optional[float] = None
     side: Optional[str] = None
     var_name: Optional[str] = None
     value: Optional[str] = None

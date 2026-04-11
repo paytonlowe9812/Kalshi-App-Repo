@@ -1,0 +1,4 @@
+{
+  "summary": "Added DELETE /api/bots/{bot_id}/rules/snapshots/{snap_id} in rules.py and SnapshotSidebar DEL button with confirm beside APPLY; refreshes list after delete.",
+  "current_status": "Rule history snapshots can be removed from UI and DB."
+}

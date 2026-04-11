@@ -1,0 +1,4 @@
+{
+  "summary": "Explored the bot editor: it is RuleEditor.jsx (Editor tab), driven by useAppStore activeBotId and optional bulkEditIds. Loads bot via GET /api/bots/{id}, auto-saves rules with debounced PUT /api/bots/{id}/rules; bulk mode saves same rules to all selected IDs. UI layers include TrendConfig, RuleToolbar (line types + HISTORY/SIM), RuleLine with ConditionBuilder/ActionBuilder, StrategyAssistant, SnapshotSidebar. Backend bots router exposes bot CRUD and /available-variables for the condition picker.",
+  "current_status": "No code changes. User has local modifications across backend rules/bots/settings and RuleEditor-related frontend files per git status; bot editor architecture is mapped for future tasks."
+}

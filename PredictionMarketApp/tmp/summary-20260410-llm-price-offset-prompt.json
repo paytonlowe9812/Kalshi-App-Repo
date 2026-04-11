@@ -1,0 +1,4 @@
+{
+  "summary": "Expanded _DEFAULT_STRATEGY_SYSTEM_PREFIX in assistant.py: LIMIT action_params documents price_var plus signed price_offset (+/- cents), stringify rules, example JSON, and a Tips line mapping user phrasing like variable plus/minus N cents to price_offset.",
+  "current_status": "Strategy assistant built-in prompt explicitly instructs LLM to emit price_offset with LIMIT; execution was already supported."
+}

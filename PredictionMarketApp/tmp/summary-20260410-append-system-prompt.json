@@ -1,0 +1,4 @@
+{
+  "summary": "Changed strategy_llm_system_prompt behavior: always include _DEFAULT_STRATEGY_SYSTEM_PREFIX, then append optional user text, then _strategy_system_suffix. Updated AppSettings labels/help to EXTRA SYSTEM PROMPT (APPENDED) and CLEAR EXTRA.",
+  "current_status": "User custom prompt supplements built-in assistant instructions; no replacement."
+}

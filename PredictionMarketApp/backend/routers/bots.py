@@ -44,6 +44,9 @@ def _bot_dict(row) -> dict:
         "roll_count": row["roll_count"] if row["roll_count"] is not None else 0,
         "last_roll_at": row["last_roll_at"],
         "contract_side": _contract_side_value(row),
+        "trend_poll_ms": row["trend_poll_ms"] if row["trend_poll_ms"] is not None else 1000,
+        "trend_confirm_count": row["trend_confirm_count"] if row["trend_confirm_count"] is not None else 3,
+        "trend_price_source": row["trend_price_source"] or "YES_price",
     }
 
 
@@ -199,6 +202,16 @@ def get_available_variables(id: int):
         if index_vars:
             groups.append({"label": f"INDEX: {idx['name']}", "vars": index_vars})
 
+    groups.append({
+        "label": "TREND",
+        "vars": [
+            {"name": "ConsecutiveUp",   "desc": "Consecutive samples where price strictly increased"},
+            {"name": "ConsecutiveDown", "desc": "Consecutive samples where price strictly decreased"},
+            {"name": "TrendUp",         "desc": "1 if ConsecutiveUp >= confirm count, else 0"},
+            {"name": "TrendDown",       "desc": "1 if ConsecutiveDown >= confirm count, else 0"},
+        ],
+    })
+
     user_vars = db.execute(
         "SELECT name, value FROM variables WHERE bot_id = ?", (id,)
     ).fetchall()
@@ -223,6 +236,7 @@ async def get_live_variables(id: int):
     vals = await resolve_all(id)
     return {
         "bot_id": id,
+        "scope": "bot",
         "kalshi_client_configured": get_kalshi_client() is not None,
         "variables": vals,
         "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -266,6 +280,15 @@ def update_bot(id: int, data: BotUpdate):
         if cs in ("yes", "no"):
             updates.append("contract_side = ?")
             params.append(cs)
+    if data.trend_poll_ms is not None:
+        updates.append("trend_poll_ms = ?")
+        params.append(max(100, data.trend_poll_ms))
+    if data.trend_confirm_count is not None:
+        updates.append("trend_confirm_count = ?")
+        params.append(max(1, data.trend_confirm_count))
+    if data.trend_price_source is not None:
+        updates.append("trend_price_source = ?")
+        params.append(data.trend_price_source.strip() or "YES_price")
     if data.market_ticker is not None and data.series_ticker is None:
         inferred = _infer_series(data.market_ticker)
         if inferred:

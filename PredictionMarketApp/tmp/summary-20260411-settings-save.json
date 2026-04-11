@@ -1,0 +1,4 @@
+{
+  "summary": "Fixed settings save: SettingsBulkUpdate now dict[str, Any] with server _coerce_setting_value (bool/int/float/str) so FastAPI/Pydantic no longer 422 on non-string JSON. PUT loop uses coerced strings for LLM blank-skip. SettingsScreen normalizes all values to strings before PUT, checks res.ok, shows saveError, refetches GET on success before clearDirty, saving state on button. loadSettings syncs theme from server after load/save.",
+  "current_status": "CONFIG save should persist; failures surface in UI instead of silently clearing dirty."
+}

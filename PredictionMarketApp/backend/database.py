@@ -174,6 +174,15 @@ MIGRATIONS = [
         UNIQUE(list_id, ticker)
     );
     """,
+    """
+    CREATE TABLE IF NOT EXISTS ai_chat_history (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bot_id     INTEGER NOT NULL REFERENCES bots(id) ON DELETE CASCADE,
+        role       TEXT NOT NULL,
+        content    TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+    );
+    """,
 ]
 
 COLUMN_MIGRATIONS = [
@@ -182,6 +191,9 @@ COLUMN_MIGRATIONS = [
     ("bots", "roll_count", "INTEGER DEFAULT 0"),
     ("bots", "last_roll_at", "TEXT"),
     ("bots", "contract_side", "TEXT DEFAULT 'yes'"),
+    ("bots", "trend_poll_ms", "INTEGER DEFAULT 1000"),
+    ("bots", "trend_confirm_count", "INTEGER DEFAULT 3"),
+    ("bots", "trend_price_source", "TEXT DEFAULT 'YES_price'"),
     ("sentiment_index_markets", "series_ticker", "TEXT"),
     ("sentiment_index_markets", "auto_roll", "INTEGER DEFAULT 1"),
 ]
@@ -204,6 +216,14 @@ DEFAULT_SETTINGS = {
     "first_launch": "true",
     # Once true, Examples group / sample bot are never auto-created again (even if deleted).
     "example_workspace_seed_completed": "false",
+    # LLM assistant provider settings
+    "strategy_llm_provider": "groq",
+    "strategy_llm_groq_key": "",
+    "strategy_llm_gemini_key": "",
+    "strategy_llm_mistral_key": "",
+    "strategy_llm_groq_model": "",
+    "strategy_llm_gemini_model": "",
+    "strategy_llm_mistral_model": "",
 }
 
 

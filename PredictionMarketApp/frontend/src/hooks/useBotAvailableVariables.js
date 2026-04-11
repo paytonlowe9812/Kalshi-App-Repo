@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import useAppStore from '../store/useAppStore';
 
 /** Bump when GET /available-variables grouping or names change (invalidates client cache). */
-const CACHE_SCHEMA = 5;
+const CACHE_SCHEMA = 6;
 const cacheByBot = new Map();
 const inflightByBot = new Map();
 

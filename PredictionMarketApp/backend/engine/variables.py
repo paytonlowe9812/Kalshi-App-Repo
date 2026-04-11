@@ -63,16 +63,133 @@ def _apply_bot_rest_enrichment(ticker: str, market: dict, variables: dict) -> No
         variables["Ask"] = round(min(100.0, mid + 0.5), 2)
 
 
+# Canonical bot-market keys (placeholders when no market is assigned or data missing).
+_BOT_MARKET_KEYS = (
+    "YES_price",
+    "NO_price",
+    "LastTraded",
+    "Bid",
+    "Ask",
+    "FillPrice",
+    "TimeToExpiry",
+    "DistanceFromStrike",
+)
+
+
+def _add_daily_pnl(variables: dict) -> None:
+    client = get_kalshi_client()
+    daily_pnl = 0.0
+    if client:
+        try:
+            db = get_db()
+            logs = db.execute(
+                "SELECT SUM(pnl) as total FROM trade_log WHERE date(logged_at) = date('now')"
+            ).fetchone()
+            daily_pnl = logs["total"] or 0.0
+        except Exception:
+            pass
+    variables["DailyPnL"] = daily_pnl
+
+
+async def _add_sentiment_indexes(variables: dict, unavailable: set[str]) -> None:
+    db = get_db()
+    indexes = db.execute("SELECT * FROM sentiment_indexes").fetchall()
+    index_ticker_set: set[str] = set()
+    index_sections: list[tuple] = []
+    for idx in indexes:
+        markets = db.execute(
+            "SELECT * FROM sentiment_index_markets WHERE index_id = ?", (idx["id"],)
+        ).fetchall()
+        index_sections.append((idx, markets))
+        for m in markets:
+            t = (m["ticker"] or "").strip()
+            if t:
+                index_ticker_set.add(t)
+
+    rest_by_index_ticker: dict[str, dict] = {}
+    if index_ticker_set and get_kalshi_client():
+
+        async def _fetch_one(tkr: str):
+            mk = await _fetch_market_rest(tkr)
+            return tkr, mk
+
+        pairs = await asyncio.gather(
+            *[_fetch_one(t) for t in index_ticker_set],
+            return_exceptions=True,
+        )
+        for item in pairs:
+            if not (isinstance(item, tuple) and len(item) == 2):
+                continue
+            tkr, mk = item
+            if isinstance(mk, dict):
+                rest_by_index_ticker[tkr] = mk
+
+    for idx, markets in index_sections:
+        total_yes = 0.0
+        total_no = 0.0
+        bull = 0
+        bear = 0
+        for m in markets:
+            raw = (m["label"] or "").strip()
+            label = raw or (m["ticker"] or "").strip() or "market"
+            tkr = (m["ticker"] or "").strip()
+            snap = ws_manager.get_cached_market(tkr) if tkr else None
+            y = n = None
+
+            market_rest = rest_by_index_ticker.get(tkr) if tkr else None
+            if market_rest:
+                y, n = implied_odds_yes_no_from_rest(market_rest)
+            elif snap and snap.yes_price is not None and snap.no_price is not None:
+                y = float(snap.yes_price)
+                n = float(snap.no_price)
+            elif (
+                snap
+                and snap.yes_bid_pct is not None
+                and snap.yes_ask_pct is not None
+                and not yes_spread_is_degenerate(snap.yes_bid_pct, snap.yes_ask_pct)
+            ):
+                y = round((float(snap.yes_bid_pct) + float(snap.yes_ask_pct)) / 2.0, 1)
+                n = round(100.0 - y, 1)
+            if y is None:
+                y = n = 50.0
+                unavailable.add(f"{label}.YES")
+                unavailable.add(f"{label}.NO")
+            total_yes += y
+            total_no += n
+            if y > 50:
+                bull += 1
+            else:
+                bear += 1
+            variables[f"{label}.YES"] = y
+            variables[f"{label}.NO"] = n
+        count = len(markets) or 1
+        variables[f"{idx['name']}.Score"] = round(total_yes / count, 1)
+        variables[f"{idx['name']}.BullCount"] = float(bull)
+        variables[f"{idx['name']}.BearCount"] = float(bear)
+        variables[f"{idx['name']}.AvgYES"] = round(total_yes / count, 1)
+        variables[f"{idx['name']}.AvgNO"] = round(total_no / count, 1)
+
+
+async def resolve_global_live_variables() -> dict[str, float]:
+    """Account-wide and index sentiment values (no bot market required)."""
+    variables: dict[str, float] = {}
+    unavailable: set[str] = set()
+    _add_daily_pnl(variables)
+    await _add_sentiment_indexes(variables, unavailable)
+    return variables
+
+
 async def _resolve_all_core(
     bot_id: int,
 ) -> tuple[dict[str, float], set[str]]:
     db = get_db()
     bot = db.execute("SELECT * FROM bots WHERE id = ?", (bot_id,)).fetchone()
-    variables: dict[str, float] = {}
+    ticker = (dict(bot).get("market_ticker") or "").strip() if bot else ""
+
+    variables = await resolve_global_live_variables()
     unavailable: set[str] = set()
 
-    if bot and bot["market_ticker"]:
-        ticker = bot["market_ticker"]
+    if bot and ticker:
         market_rest = await _fetch_market_rest(ticker) if get_kalshi_client() else None
         snap = ws_manager.get_cached_market(ticker)
         # Kalshi often sends a wide YES book (bid 0 / ask 100) when liquidity is thin.
@@ -154,29 +271,25 @@ async def _resolve_all_core(
             variables["Bid"] = round(100.0 - yes_ask, 2)
             variables["Ask"] = round(100.0 - yes_bid, 2)
 
+    elif bot:
+        for k in _BOT_MARKET_KEYS:
+            variables[k] = 0.0
+            unavailable.add(k)
+
     client = get_kalshi_client()
-    daily_pnl = 0.0
     position_size = 0.0
     if client:
         try:
-            logs = db.execute(
-                "SELECT SUM(pnl) as total FROM trade_log WHERE date(logged_at) = date('now')"
-            ).fetchone()
-            daily_pnl = logs["total"] or 0.0
-        except Exception:
-            pass
-        try:
             positions = await client.get_positions()
             pos_list = positions.get("market_positions", [])
-            if bot and bot["market_ticker"]:
+            if bot and ticker:
                 for p in pos_list:
-                    if p.get("ticker") == bot["market_ticker"]:
+                    if p.get("ticker") == ticker:
                         position_size = float(p.get("position", 0))
                         break
         except Exception:
             pass
 
-    variables["DailyPnL"] = daily_pnl
     variables["PositionSize"] = position_size
     # Same market as PositionSize: 1.0 if Kalshi reports any non-zero position on this ticker.
     variables["HasPosition"] = 1.0 if abs(position_size) > 1e-9 else 0.0
@@ -185,10 +298,9 @@ async def _resolve_all_core(
 
     resting_count = 0.0
     oldest_age_sec = 0.0
-    if client and bot and bot["market_ticker"]:
+    if client and bot and ticker:
         try:
-            tkr = bot["market_ticker"]
-            odata = await client.get_orders(ticker=tkr, status="resting", limit=200)
+            odata = await client.get_orders(ticker=ticker, status="resting", limit=200)
             now = time.time()
             oldest_delta = 0.0
             for o in odata.get("orders") or []:
@@ -208,84 +320,6 @@ async def _resolve_all_core(
     variables["RestingLimitCount"] = resting_count
     variables["OldestRestingLimitAgeSec"] = oldest_age_sec
 
-    indexes = db.execute("SELECT * FROM sentiment_indexes").fetchall()
-    index_ticker_set: set[str] = set()
-    index_sections: list[tuple] = []
-    for idx in indexes:
-        markets = db.execute(
-            "SELECT * FROM sentiment_index_markets WHERE index_id = ?", (idx["id"],)
-        ).fetchall()
-        index_sections.append((idx, markets))
-        for m in markets:
-            t = (m["ticker"] or "").strip()
-            if t:
-                index_ticker_set.add(t)
-
-    rest_by_index_ticker: dict[str, dict] = {}
-    if index_ticker_set and get_kalshi_client():
-
-        async def _fetch_one(tkr: str):
-            mk = await _fetch_market_rest(tkr)
-            return tkr, mk
-
-        pairs = await asyncio.gather(
-            *[_fetch_one(t) for t in index_ticker_set],
-            return_exceptions=True,
-        )
-        for item in pairs:
-            if not (isinstance(item, tuple) and len(item) == 2):
-                continue
-            tkr, mk = item
-            if isinstance(mk, dict):
-                rest_by_index_ticker[tkr] = mk
-
-    for idx, markets in index_sections:
-        total_yes = 0.0
-        total_no = 0.0
-        bull = 0
-        bear = 0
-        for m in markets:
-            raw = (m["label"] or "").strip()
-            label = raw or (m["ticker"] or "").strip() or "market"
-            tkr = (m["ticker"] or "").strip()
-            snap = ws_manager.get_cached_market(tkr) if tkr else None
-            y = n = None
-
-            # Match /api/indexes/{id}/live: prefer REST implied odds when available.
-            # WS alone can show bogus ~0/~100 from stale price_dollars on a wide book.
-            market_rest = rest_by_index_ticker.get(tkr) if tkr else None
-            if market_rest:
-                y, n = implied_odds_yes_no_from_rest(market_rest)
-            elif snap and snap.yes_price is not None and snap.no_price is not None:
-                y = float(snap.yes_price)
-                n = float(snap.no_price)
-            elif (
-                snap
-                and snap.yes_bid_pct is not None
-                and snap.yes_ask_pct is not None
-                and not yes_spread_is_degenerate(snap.yes_bid_pct, snap.yes_ask_pct)
-            ):
-                y = round((float(snap.yes_bid_pct) + float(snap.yes_ask_pct)) / 2.0, 1)
-                n = round(100.0 - y, 1)
-            if y is None:
-                y = n = 50.0
-                unavailable.add(f"{label}.YES")
-                unavailable.add(f"{label}.NO")
-            total_yes += y
-            total_no += n
-            if y > 50:
-                bull += 1
-            else:
-                bear += 1
-            variables[f"{label}.YES"] = y
-            variables[f"{label}.NO"] = n
-        count = len(markets) or 1
-        variables[f"{idx['name']}.Score"] = round(total_yes / count, 1)
-        variables[f"{idx['name']}.BullCount"] = float(bull)
-        variables[f"{idx['name']}.BearCount"] = float(bear)
-        variables[f"{idx['name']}.AvgYES"] = round(total_yes / count, 1)
-        variables[f"{idx['name']}.AvgNO"] = round(total_no / count, 1)
-
     user_vars = db.execute(
         "SELECT name, value FROM variables WHERE bot_id = ?", (bot_id,)
     ).fetchall()
@@ -294,6 +328,16 @@ async def _resolve_all_core(
             variables[v["name"]] = float(v["value"])
         except (ValueError, TypeError):
             variables[v["name"]] = 0.0
+
+    # Trend tracker — sampled at trend_poll_ms cadence, independent of loop speed
+    if bot:
+        from backend.engine.trend import update_trend as _update_trend
+        b = dict(bot)
+        poll_ms = int(b.get("trend_poll_ms") or 1000)
+        confirm_count = int(b.get("trend_confirm_count") or 3)
+        price_source = (b.get("trend_price_source") or "YES_price").strip() or "YES_price"
+        current_price = float(variables.get(price_source) or 0.0)
+        variables.update(_update_trend(bot_id, current_price, poll_ms, confirm_count))
 
     return variables, unavailable
 
