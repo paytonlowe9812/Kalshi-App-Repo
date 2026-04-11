@@ -19,6 +19,7 @@ from backend.kalshi.client import KalshiClient, set_kalshi_client
 from backend.kalshi.websocket import ws_manager, get_all_tickers
 
 from backend.routers import (
+    assistant,
     settings,
     keys,
     bots,
@@ -79,6 +80,7 @@ app.add_middleware(
 )
 
 app.include_router(settings.router)
+app.include_router(assistant.router)
 app.include_router(keys.router)
 app.include_router(bots.router)
 app.include_router(groups.router)
