@@ -139,7 +139,23 @@ async def run_bot(bot_id: int):
                     db = get_db()
                     _bot_row = db.execute("SELECT name FROM bots WHERE id = ?", (bot_id,)).fetchone()
                     _bot_name = _bot_row["name"] if _bot_row else str(bot_id)
-                    log_event(bot_id, _bot_name, "DEBUG", "TICK_IDLE", "No condition met", {})
+                    log_event(
+                        bot_id,
+                        _bot_name,
+                        "DEBUG",
+                        "TICK_IDLE",
+                        "No condition met",
+                        {
+                            "has_position": variables.get("HasPosition"),
+                            "position_size": variables.get("PositionSize"),
+                            "resting_limits": variables.get("RestingLimitCount"),
+                            "time_to_expiry": variables.get("TimeToExpiry"),
+                            "bid": variables.get("Bid"),
+                            "ask": variables.get("Ask"),
+                            "trend_up": variables.get("TrendUp"),
+                            "trend_down": variables.get("TrendDown"),
+                        },
+                    )
 
             db = get_db()
             db.execute(

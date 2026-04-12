@@ -127,7 +127,7 @@ def run_simulation(data: SimulationRequest):
                         "CANCEL_STALE",
                     )
                     reason = (
-                        f"Action: CANCEL_STALE (would cancel limits older than {ms} ms)"
+                        f"Action: CANCEL_STALE (would cancel BUY limits older than {ms} ms)"
                     )
                 steps.append(SimulationStep(
                     line_number=ln, result="hit",
@@ -173,7 +173,7 @@ def run_simulation(data: SimulationRequest):
                         "CANCEL_STALE",
                     )
                     reason = (
-                        f"Else branch: CANCEL_STALE (limits older than {ms} ms)"
+                        f"Else branch: CANCEL_STALE (BUY limits older than {ms} ms)"
                     )
                 steps.append(SimulationStep(
                     line_number=ln, result="hit",
@@ -245,7 +245,7 @@ def run_simulation(data: SimulationRequest):
                     60_000,
                     "CANCEL_STALE",
                 )
-                reason = f"CANCEL_STALE (limits older than {ms} ms, simulated)"
+                reason = f"CANCEL_STALE (BUY limits older than {ms} ms, simulated)"
             steps.append(SimulationStep(
                 line_number=ln, result="hit", reason=reason
             ))

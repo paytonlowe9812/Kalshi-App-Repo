@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import json
 
 import httpx
 
@@ -228,6 +229,58 @@ def _resolve_float(var_key: str | None, literal, variables: dict, fallback: floa
         return fallback
 
 
+def _limit_action_from_rule_params(action_params: str | None) -> str:
+    """Best-effort parse of LIMIT direction from stored action_params JSON."""
+    try:
+        params = json.loads(action_params or "{}")
+    except (TypeError, ValueError):
+        params = {}
+    raw_action = str(params.get("order_action") or "").strip().lower()
+    if raw_action in ("buy", "sell"):
+        return raw_action
+    # Backward compatibility for very old rules that encoded direction in "side".
+    raw_side = str(params.get("side") or "").strip().lower()
+    if raw_side in ("yes", "no"):
+        return "sell" if raw_side == "no" else "buy"
+    return ""
+
+
+def _resolve_limit_order_action(db, bot_id: int, action: Action) -> str:
+    """
+    Resolve LIMIT buy/sell direction robustly.
+
+    Primary source is action.order_action from evaluator parse.
+    If that is missing/invalid, re-read action_params for fired_line from DB so
+    execution still honors saved rule direction.
+    """
+    raw = str(action.order_action or "").strip().lower()
+    if action.fired_line is not None:
+        row = db.execute(
+            "SELECT action_params FROM rules WHERE bot_id = ? AND line_number = ? LIMIT 1",
+            (bot_id, action.fired_line),
+        ).fetchone()
+        if row:
+            recovered = _limit_action_from_rule_params(row["action_params"])
+            if recovered in ("buy", "sell"):
+                return recovered
+    if raw in ("buy", "sell"):
+        return raw
+    return "buy"
+
+
+def _resting_limit_is_buy(order: dict) -> bool:
+    """
+    True only when a resting limit order is explicitly a BUY.
+
+    Safety rule: if order direction is missing/unknown, treat it as non-buy so
+    CANCEL_STALE never cancels LIMIT SELL exits by accident.
+    """
+    raw_action = str(order.get("action") or order.get("order_action") or "").strip().lower()
+    if raw_action in ("buy", "sell"):
+        return raw_action == "buy"
+    return False
+
+
 async def execute(bot_id: int, action: Action, variables: dict):
     db = get_db()
     bot = db.execute("SELECT * FROM bots WHERE id = ?", (bot_id,)).fetchone()
@@ -347,9 +400,7 @@ async def execute(bot_id: int, action: Action, variables: dict):
         if lim_side not in ("yes", "no"):
             lim_side = cs
         # order_action: buy (entering) or sell (exiting) — from action.order_action
-        lim_action = (action.order_action or "buy").lower()
-        if lim_action not in ("buy", "sell"):
-            lim_action = "buy"
+        lim_action = _resolve_limit_order_action(db, bot_id, action)
         is_sell_limit = (lim_action == "sell")
         sent = False
         bot_name = dict(bot).get("name", "")
@@ -382,7 +433,7 @@ async def execute(bot_id: int, action: Action, variables: dict):
                 if _has_market_position(variables) or live_pos:
                     logger.debug("Bot %s LIMIT BUY skipped: position on %s", bot_id, ticker)
                     log_event(bot_id, bot_name, "DEBUG", "SKIPPED_GUARD",
-                              f"LIMIT skipped: already positioned on {ticker}", {"action": "LIMIT"})
+                              f"LIMIT BUY skipped: already positioned on {ticker}", {"action": "LIMIT"})
                 elif _has_resting_limit(variables) or live_resting > 0:
                     logger.debug("Bot %s LIMIT BUY skipped: resting limit on %s", bot_id, ticker)
                     log_event(bot_id, bot_name, "DEBUG", "SKIPPED_GUARD",
@@ -516,6 +567,8 @@ async def execute(bot_id: int, action: Action, variables: dict):
                 now = time.time()
                 for o in data.get("orders") or []:
                     if (o.get("type") or "").lower() != "limit":
+                        continue
+                    if not _resting_limit_is_buy(o):
                         continue
                     oid = o.get("order_id")
                     if not oid:
