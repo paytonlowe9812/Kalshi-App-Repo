@@ -1,0 +1,4 @@
+{
+  "summary": "Created a Markdown strategy explainer for the three newly injected short-binary templates and documented each strategy's thesis, entry conditions, exit ladder, regime fit, and main failure mode. The file also includes shared risk controls and practical execution notes aligned with your current rule engine behavior.",
+  "current_status": "A new markdown guide is available at tmp/novel-short-binary-strategies.md describing Drift ladder maker, Exhaustion snapback maker, and Late squeeze clip."
+}

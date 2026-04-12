@@ -6,6 +6,20 @@ from backend.kalshi.client import get_kalshi_client
 
 logger = logging.getLogger(__name__)
 
+
+def _read_position_fp(p: dict) -> float:
+    """Read signed position from a Kalshi market_positions entry.
+    Current API: 'position_fp' (fixed-point string e.g. '5.00').
+    Legacy API:  'position' (integer). +N = YES contracts, -N = NO contracts."""
+    for key in ("position_fp", "position"):
+        v = p.get(key)
+        if v is not None:
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                continue
+    return 0.0
+
 CIRCUIT_BREAKER_PRICE_THRESHOLD = 0.50
 CIRCUIT_BREAKER_ENTRY_THRESHOLD = 0.80
 

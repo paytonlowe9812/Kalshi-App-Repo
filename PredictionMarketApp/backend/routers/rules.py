@@ -1,6 +1,6 @@
 import json
 from fastapi import APIRouter, HTTPException
-from backend.database import get_db
+from backend.database import get_db, upsert_builtin_strategy_snapshots
 from backend.models import RuleSetUpdate, SnapshotCreate
 
 router = APIRouter(prefix="/api/bots/{bot_id}/rules", tags=["rules"])
@@ -48,6 +48,22 @@ def create_snapshot(bot_id: int, data: SnapshotCreate):
     db.commit()
     snap_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
     return {"id": snap_id, "status": "snapshot saved"}
+
+
+@router.post("/snapshots/builtin")
+def seed_builtin_snapshots(bot_id: int):
+    """Insert or refresh all built-in strategy snapshots from seed_data (rules_json from disk)."""
+    db = get_db()
+    result = upsert_builtin_strategy_snapshots(db, bot_id)
+    if not result.get("ok"):
+        raise HTTPException(404, "Bot not found")
+    db.commit()
+    return {
+        "status": "ok",
+        "inserted": result["inserted"],
+        "updated": result["updated"],
+        "names": result["names"],
+    }
 
 
 @router.get("/snapshots")

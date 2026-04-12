@@ -204,9 +204,14 @@ class KalshiWebSocketManager:
                 snap.no_ask_pct = book["no_ask"]
                 y_imp, n_imp = implied_odds_yes_no_from_ws(data)
                 snap.yes_price, snap.no_price = y_imp, n_imp
-                lt = scalar_to_implied_pct(data.get("price_dollars"))
-                if lt is None:
-                    lt = scalar_to_implied_pct(data.get("last_price"))
+                # Try all last-trade fields in order of preference.
+                # Only store if >= 1.0 (rejects subpenny values like price_dollars="0.001").
+                lt = None
+                for _lt_field in ("price_dollars", "last_price_dollars", "last_price", "previous_price_dollars"):
+                    _v = scalar_to_implied_pct(data.get(_lt_field))
+                    if _v is not None and _v >= 1.0:
+                        lt = _v
+                        break
                 if lt is not None:
                     snap.last_traded = lt
                 if book["yes_bid"] is not None:

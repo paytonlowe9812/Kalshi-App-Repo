@@ -53,16 +53,19 @@ def update_trend(
     if now - state.last_sample_ts >= poll_sec:
         state.last_sample_ts = now
         prev = state.prices[-1] if state.prices else None
-        state.prices.append(current_price)
-
-        if prev is not None:
-            if current_price > prev:
-                state.consecutive_up += 1
-                state.consecutive_down = 0
-            elif current_price < prev:
-                state.consecutive_down += 1
-                state.consecutive_up = 0
-            # equal price — leave counters unchanged
+        # Skip when the quote is unchanged vs last sample — Kalshi often repeats the same
+        # YES_price for many polls; counting those would stall ConsecutiveUp/Down forever.
+        if prev is not None and current_price == prev:
+            pass
+        else:
+            state.prices.append(current_price)
+            if prev is not None:
+                if current_price > prev:
+                    state.consecutive_up += 1
+                    state.consecutive_down = 0
+                elif current_price < prev:
+                    state.consecutive_down += 1
+                    state.consecutive_up = 0
 
     threshold = max(1, confirm_count)
     return {

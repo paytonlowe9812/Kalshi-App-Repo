@@ -1,0 +1,4 @@
+{
+  "summary": "User requested renaming the Rule Editor HISTORY control to snapshots. Updated RuleToolbar.jsx button label from HISTORY to snapshots; SnapshotSidebar panel header from RULE HISTORY to snapshots for consistency.",
+  "current_status": "PredictionMarketApp: UI label change only; onOpenHistory prop name unchanged internally."
+}

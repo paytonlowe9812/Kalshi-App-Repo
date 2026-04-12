@@ -28,7 +28,7 @@ export default function RuleToolbar({ onAddLine, onSimulate, onOpenHistory }) {
             className="text-[10px] md:text-[11px] px-2 py-0.5 font-mono border border-terminal-border-dim bg-terminal-panel text-terminal-amber-dim hover:text-terminal-amber hover:border-terminal-amber/50 transition-colors flex-shrink-0"
             title="View and restore rule snapshots"
           >
-            HISTORY
+            snapshots
           </button>
           <div className="flex-1" />
           <button

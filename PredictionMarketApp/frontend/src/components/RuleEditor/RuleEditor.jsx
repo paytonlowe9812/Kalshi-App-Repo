@@ -24,6 +24,8 @@ export default function RuleEditor({ onOpenSimulator }) {
   const [botName, setBotName] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
   const [simResults, setSimResults] = useState({});
+  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [dropIndex, setDropIndex] = useState(null);
   const saveTimeout = useRef(null);
 
   const fetchBot = useCallback(async () => {
@@ -55,18 +57,26 @@ export default function RuleEditor({ onOpenSimulator }) {
     group_logic: r.group_logic || null,
   }));
 
+  const persistRules = useCallback(async (updatedRules) => {
+    const { activeBotId: bid } = useAppStore.getState();
+    if (!bid) return;
+    await fetch(`/api/bots/${bid}/rules`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rules: buildPayload(updatedRules) }),
+    });
+  }, []);
+
   // Auto-save always goes to the active bot only (single-bot or bulk template).
   const saveRules = useCallback((updatedRules) => {
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(async () => {
-      const { activeBotId: bid } = useAppStore.getState();
-      if (!bid) return;
-      await fetch(`/api/bots/${bid}/rules`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rules: buildPayload(updatedRules) }),
-      });
-    }, 800);
-  }, []);
+    saveTimeout.current = setTimeout(() => { persistRules(updatedRules); }, 800);
+  }, [persistRules]);
+
+  const saveRulesImmediate = useCallback((updatedRules) => {
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    persistRules(updatedRules);
+  }, [persistRules]);
 
   // Explicit bulk save — writes the current editor rules to every selected bot sequentially.
   const saveBulkAll = async () => {
@@ -103,6 +113,45 @@ export default function RuleEditor({ onOpenSimulator }) {
   const moveUp = (i) => { if (i === 0) return; const n = [...rules]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; n.forEach((r, j) => r.line_number = j + 1); setRules(n); saveRules(n); };
   const moveDown = (i) => { if (i >= rules.length - 1) return; const n = [...rules]; [n[i], n[i + 1]] = [n[i + 1], n[i]]; n.forEach((r, j) => r.line_number = j + 1); setRules(n); saveRules(n); };
   const deleteLine = (i) => { const n = rules.filter((_, j) => j !== i); n.forEach((r, j) => r.line_number = j + 1); setRules(n); saveRules(n); };
+  const renumberRules = useCallback((ruleList) => (
+    ruleList.map((r, i) => ({ ...r, line_number: i + 1 }))
+  ), []);
+
+  const handleDragStart = useCallback((index, e) => {
+    setDraggingIndex(index);
+    setDropIndex(index);
+    if (e?.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(index));
+    }
+  }, []);
+
+  const handleDragOverSlot = useCallback((slot, e) => {
+    if (draggingIndex === null) return;
+    e.preventDefault();
+    if (e?.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    if (dropIndex !== slot) setDropIndex(slot);
+  }, [draggingIndex, dropIndex]);
+
+  const handleDropAtSlot = useCallback((slot, e) => {
+    if (draggingIndex === null) return;
+    e.preventDefault();
+    const next = [...rules];
+    const [moved] = next.splice(draggingIndex, 1);
+    let insertAt = slot;
+    if (draggingIndex < insertAt) insertAt -= 1;
+    next.splice(insertAt, 0, moved);
+    const renumbered = renumberRules(next);
+    setRules(renumbered);
+    saveRulesImmediate(renumbered);
+    setDraggingIndex(null);
+    setDropIndex(null);
+  }, [draggingIndex, renumberRules, rules, saveRulesImmediate]);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggingIndex(null);
+    setDropIndex(null);
+  }, []);
 
   const applyAssistantRules = useCallback((suggested) => {
     const conditionTypes = new Set(['IF', 'AND', 'OR']);
@@ -169,6 +218,8 @@ export default function RuleEditor({ onOpenSimulator }) {
   if (!activeBotId) {
     return <div className="flex items-center justify-center h-full text-terminal-amber-dim text-xs font-mono px-4 text-center">SELECT A BOT FROM THE BOTS TAB TO START EDITING.</div>;
   }
+
+  const showDropTargets = draggingIndex !== null;
 
   return (
     <div className="h-full flex min-h-0">
@@ -282,8 +333,48 @@ export default function RuleEditor({ onOpenSimulator }) {
           <div className="max-w-5xl mx-auto px-4 md:px-8 lg:px-16 py-1">
             {rules.length === 0 && <div className="flex items-center justify-center h-32 text-xs text-terminal-amber-dim font-mono px-4 text-center">ADD RULE LINES USING THE TOOLBAR ABOVE</div>}
             {rules.map((rule, i) => (
-              <RuleLine key={`${rule.line_type}-${i}`} rule={{ ...rule, line_number: i + 1 }} index={i} onUpdate={(u) => updateRule(i, u)} onMoveUp={() => moveUp(i)} onMoveDown={() => moveDown(i)} onDelete={() => deleteLine(i)} simResult={simResults[i + 1]} isFirst={i === 0} isLast={i === rules.length - 1} />
+              <React.Fragment key={`${rule.line_type}-${i}`}>
+                <div
+                  onDragOver={(e) => handleDragOverSlot(i, e)}
+                  onDrop={(e) => handleDropAtSlot(i, e)}
+                  className={`${showDropTargets ? 'h-3' : 'h-0'} transition-all duration-75`}
+                >
+                  <div
+                    className={`w-full border-t-2 ${
+                      showDropTargets && dropIndex === i ? 'border-terminal-green-text' : 'border-transparent'
+                    }`}
+                  />
+                </div>
+                <RuleLine
+                  rule={{ ...rule, line_number: i + 1 }}
+                  index={i}
+                  onUpdate={(u) => updateRule(i, u)}
+                  onMoveUp={() => moveUp(i)}
+                  onMoveDown={() => moveDown(i)}
+                  onDelete={() => deleteLine(i)}
+                  simResult={simResults[i + 1]}
+                  isFirst={i === 0}
+                  isLast={i === rules.length - 1}
+                  draggableEnabled
+                  isDragging={draggingIndex === i}
+                  onDragStart={(e) => handleDragStart(i, e)}
+                  onDragEnd={handleDragEnd}
+                />
+              </React.Fragment>
             ))}
+            {rules.length > 0 && (
+              <div
+                onDragOver={(e) => handleDragOverSlot(rules.length, e)}
+                onDrop={(e) => handleDropAtSlot(rules.length, e)}
+                className={`${showDropTargets ? 'h-3' : 'h-0'} transition-all duration-75`}
+              >
+                <div
+                  className={`w-full border-t-2 ${
+                    showDropTargets && dropIndex === rules.length ? 'border-terminal-green-text' : 'border-transparent'
+                  }`}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

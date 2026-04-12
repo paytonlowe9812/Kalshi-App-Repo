@@ -1,6 +1,9 @@
 import json
+import logging
 from backend.database import get_db
 from backend.models import Action, EvaluationResult, InfiniteLoopError
+
+logger = logging.getLogger(__name__)
 
 OPERATOR_MAP = {
     "eq": lambda a, b: a == b,
@@ -31,6 +34,17 @@ def _parse_action(rule: dict) -> Action | None:
         params = json.loads(rule.get("action_params") or "{}")
     except (ValueError, TypeError):
         params = {}
+    action_side = params.get("side")
+    order_action = params.get("order_action")
+    if str(action_type).upper() == "LIMIT":
+        # Backward compatibility: old UI encoded LIMIT BUY/SELL in "side":
+        #   side=yes -> BUY, side=no -> SELL.
+        # New schema separates direction (order_action) from contract side (side).
+        raw_side = str(action_side or "").strip().lower()
+        raw_action = str(order_action or "").strip().lower()
+        if raw_action not in ("buy", "sell") and raw_side in ("yes", "no"):
+            order_action = "sell" if raw_side == "no" else "buy"
+            action_side = None
     return Action(
         type=action_type,
         contracts=params.get("contracts"),
@@ -38,7 +52,8 @@ def _parse_action(rule: dict) -> Action | None:
         price=params.get("price"),
         price_var=params.get("price_var"),
         price_offset=params.get("price_offset"),
-        side=params.get("side"),
+        side=action_side,
+        order_action=order_action,
         var_name=params.get("var_name"),
         value=params.get("value"),
         message=params.get("message"),
@@ -65,6 +80,7 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
     line_index = 0
     visit_counts: dict[int, int] = {}
     condition_met = False
+    in_condition_chain = False
 
     while line_index < len(rules_list):
         rule = rules_list[line_index]
@@ -83,11 +99,14 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
             result = op_fn(left, right)
 
             if lt == "IF":
-                condition_met = result
+                # Safety behavior: a consecutive IF line is treated as an implicit AND.
+                # This prevents the prior IF from being accidentally overwritten.
+                condition_met = (condition_met and result) if in_condition_chain else result
             elif lt == "AND":
-                condition_met = condition_met and result
+                condition_met = (condition_met and result) if in_condition_chain else result
             elif lt == "OR":
-                condition_met = condition_met or result
+                condition_met = (condition_met or result) if in_condition_chain else result
+            in_condition_chain = True
             line_index += 1
 
         elif lt == "THEN":
@@ -96,6 +115,12 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
                 if action:
                     action.fired_line = ln
                     return EvaluationResult(action=action, fired_line=ln)
+                logger.warning(
+                    "Bot %s line %s: THEN conditions passed but action_type is missing or empty — no order",
+                    bot_id,
+                    ln,
+                )
+            in_condition_chain = False
             line_index += 1
 
         elif lt == "ELSE":
@@ -104,6 +129,7 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
                 if action:
                     action.fired_line = ln
                     return EvaluationResult(action=action, fired_line=ln)
+            in_condition_chain = False
             line_index += 1
 
         elif lt == "GOTO":
@@ -127,6 +153,7 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
                 line_index = target_idx
             else:
                 line_index += 1
+            in_condition_chain = False
 
         elif lt == "STOP":
             return EvaluationResult(
@@ -141,6 +168,7 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
             if action:
                 action.fired_line = ln
                 return EvaluationResult(action=action, fired_line=ln)
+            in_condition_chain = False
             line_index += 1
 
         elif lt in ("LOG", "ALERT", "NOOP", "PAUSE", "CANCEL_STALE"):
@@ -148,9 +176,11 @@ def evaluate(bot_id: int, variables: dict) -> EvaluationResult:
             if action:
                 action.fired_line = ln
                 return EvaluationResult(action=action, fired_line=ln)
+            in_condition_chain = False
             line_index += 1
 
         else:
+            in_condition_chain = False
             line_index += 1
 
     return EvaluationResult()

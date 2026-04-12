@@ -79,7 +79,7 @@ Each object fields:
 - For IF/AND/OR: left_operand (variable name or numeric string), operator: eq | neq | gt | lt | gte | lte, right_operand (variable name OR plain numeric string — NO expressions, NO formulas, e.g. "20" not "NO_price*0.2")
 - For THEN/ELSE: action_type: BUY | SELL | LIMIT | CLOSE | SET_VAR | STOP | NOOP | PAUSE | LOG | ALERT | CANCEL_STALE
 - action_params: always a JSON **string** (serialize the object, then put that string in the rule's action_params field). Use double quotes inside the JSON.
-- LIMIT action_params object: include "side":"yes"|"no", "contracts" (int) or "contracts_var" (string). For limit **price** in cents (1-99): either (a) "price": <int> for a fixed cent price, or (b) "price_var": "<VariableName>" for a dynamic base price from the engine (LastTraded, Bid, Ask, YES_price, NO_price, FillPrice, etc.) plus optional "price_offset": <signed int> — **offset is added in cents after** the variable resolves (e.g. price_offset 5 = five cents above that value; -5 = five below). When using price_var, omit "price". Example JSON before stringifying: {"side":"yes","contracts":1,"price_var":"LastTraded","price_offset":5}
+- LIMIT action_params object: include "order_action":"buy"|"sell", optional "side":"yes"|"no" (contract side override; omit to use the bot default side), and "contracts" (int) or "contracts_var" (string). For limit **price** in cents (1-99): either (a) "price": <int> for a fixed cent price, or (b) "price_var": "<VariableName>" for a dynamic base price from the engine (LastTraded, Bid, Ask, YES_price, NO_price, FillPrice, etc.) plus optional "price_offset": <signed int> — **offset is added in cents after** the variable resolves (e.g. price_offset 5 = five cents above that value; -5 = five below). When using price_var, omit "price". Example JSON before stringifying: {"order_action":"buy","contracts":1,"price_var":"LastTraded","price_offset":5}
 - group_id, group_logic: optional strings for grouping
 
 ## Useful variables
@@ -93,10 +93,10 @@ PositionSize, AbsPositionSize, HasPosition, RestingLimitCount, OldestRestingLimi
 
 ## Critical safety rules — ALWAYS follow these or the bot will spam infinite orders
 1. Every BUY / SELL / LIMIT action block MUST be preceded by a position/order guard.
-   - For market orders: add `IF HasPosition eq 0` (or `IF PositionSize eq 0`) before buying,
+   - For market orders: add `IF HasPosition eq 0` before buying,
      and `IF HasPosition eq 1` (or `IF PositionSize gt 0`) before selling.
-   - For limit orders: add `IF RestingLimitCount eq 0` before placing a LIMIT to prevent
-     duplicate resting orders on every loop tick.
+   - For limit orders: ALWAYS add `IF RestingLimitCount eq 0` before placing a LIMIT.
+     Without this guard the bot places a new limit order every loop tick — infinite spam.
    - Combine guards with AND lines when multiple conditions are needed.
 2. Never emit a LIMIT or BUY/SELL without at least one guard that becomes false once the
    order/position exists — otherwise the action fires every loop tick indefinitely.
@@ -112,9 +112,18 @@ PositionSize, AbsPositionSize, HasPosition, RestingLimitCount, OldestRestingLimi
    ```
    For limit orders replace HasPosition guard with RestingLimitCount eq 0.
 
+## Common sense guards — always apply these unless the user explicitly says otherwise
+- **Loss limit**: add a stop-loss — if DailyPnL drops below a reasonable threshold (e.g. -5), STOP the bot.
+- **Expiry guard**: if the strategy depends on price movement, add `IF TimeToExpiry gt 5` (or similar) to avoid trading in the last few minutes before settlement where prices can be erratic.
+- **Position cap**: use `IF AbsPositionSize lt <max>` (e.g. 5) before BUY/SELL to prevent runaway position size.
+- **No double entry**: always check `HasPosition eq 0` before any BUY and `HasPosition eq 1` before any SELL — never omit these even if the user doesn't ask for them.
+- **No stale limits**: if placing limit orders, consider adding a CANCEL_STALE action with a reasonable max_age_ms (e.g. 30000 = 30 seconds) so old unfilled limits don't accumulate.
+- **Sensible price bounds**: for LIMIT orders, keep price between 2 and 98 cents — avoid 1 or 99 as Kalshi may reject them.
+- **Small default size**: default to 1 contract unless the user specifies more — never generate strategies with large contract counts without being asked.
+
 ## Tips
 - Resting limits do not change PositionSize until fill; use RestingLimitCount to avoid duplicate limits.
-- Bot default contract side is below; LIMIT can set side yes|no in action_params.
+- Bot default contract side is below; LIMIT may override side with side yes|no, and direction is controlled by order_action buy|sell.
 - If the user asks for a limit at "variable plus/minus N cents", emit LIMIT with price_var + price_offset (not a formula in operands). E.g. five cents under last trade: price_var LastTraded, price_offset -5. Five cents over Bid: price_var Bid, price_offset 5.
 
 """

@@ -1,0 +1,4 @@
+{
+  "summary": "Researched short-dated futures algos (intraday momentum/breakout with time filters, mean reversion from stretched levels, flatten-into-expiry, daily loss stop). Mapped to Kalshi YES binary via TimeToExpiry, TrendUp/TrendDown, YES_price bands, LIMIT join bid (Ask-2) and MR bounce (LastTraded+3). Added backend/seed_data/short_futures_snapshot_rules.json (24 lines) and database._seed_short_futures_rules_snapshot on init_db once per DB (setting builtin_snapshot_short_futures_seeded), attaching to first bot by id for FK. Snapshot name: Short futures-style algo (seed).",
+  "current_status": "PredictionMarketApp: built-in snapshot injects on next app start if at least one bot exists and seed not marked done. Tune thresholds (70, 36-42, 78, DailyPnL -10, TTE 2/5/8) per market."
+}

@@ -1,0 +1,4 @@
+{
+  "summary": "Continued the LIMIT-order bug fix by wiring evaluator parsing for order_action, adding backward compatibility for legacy LIMIT rules where side encoded buy/sell direction, and updating the Rule Editor LIMIT UI to split direction (buy/sell) from contract side (bot/yes/no). Also updated assistant prompt guidance so generated LIMIT action_params include order_action and optional side override. Verified backend syntax and frontend build to ensure the changes compile cleanly.",
+  "current_status": "LIMIT direction vs contract-side handling is now explicitly separated and legacy LIMIT rows are interpreted safely at runtime; build and compile checks passed."
+}

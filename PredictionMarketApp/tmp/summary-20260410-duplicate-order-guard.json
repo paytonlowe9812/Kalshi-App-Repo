@@ -1,0 +1,4 @@
+{
+  "summary": "User saw excessive exec_count/orders in 15m while intending single entry hold-to-expiry. Root cause: THEN can match every loop tick; LIMIT rests with HasPosition still 0 without IF RestingLimitCount eq 0. Added executor guards in actions.py: skip BUY if already positioned, skip SELL if flat, skip LIMIT if position or any resting limit; exec_count increments only when the action has a real effect (order sent, SET_VAR, STOP, etc.), not on skipped duplicates.",
+  "current_status": "PredictionMarketApp: duplicate entry/exit suppression in backend/engine/actions.py; VARS descriptions updated in bots.py. Users scaling in with multiple BUYs would need explicit workflow change since second BUY is now blocked while HasPosition."
+}

@@ -1,0 +1,4 @@
+{
+  "summary": "User reported MARKET BUY/SELL fails while LIMIT works. Root cause: create_order sent type=market with no yes_price/no_price; Kalshi CreateOrderRequest is price-based. Updated KalshiClient.create_order so order_type market becomes limit plus immediate_or_cancel with aggressive price (buy 99 / sell 1 on the quoted side), fixing actions.py and risk.py in one place.",
+  "current_status": "PredictionMarketApp: market orders now map to aggressive IOC limits in backend/kalshi/client.py. LIMIT path unchanged. Panic close-all uses same client and benefits."
+}

@@ -1,0 +1,48 @@
+[
+  {"line_number": 1,  "line_type": "IF",   "left_operand": "YES_price",        "operator": "gt",  "right_operand": "83",  "action_type": null,   "action_params": null},
+  {"line_number": 2,  "line_type": "AND",  "left_operand": "YES_price",        "operator": "lt",  "right_operand": "94",  "action_type": null,   "action_params": null},
+  {"line_number": 3,  "line_type": "AND",  "left_operand": "HasPosition",      "operator": "eq",  "right_operand": "0",   "action_type": null,   "action_params": null},
+  {"line_number": 4,  "line_type": "AND",  "left_operand": "RestingLimitCount","operator": "eq",  "right_operand": "0",   "action_type": null,   "action_params": null},
+  {"line_number": 5,  "line_type": "AND",  "left_operand": "TimeToExpiry",     "operator": "lt",  "right_operand": "6",   "action_type": null,   "action_params": null},
+  {"line_number": 6,  "line_type": "AND",  "left_operand": "TimeToExpiry",     "operator": "gt",  "right_operand": "2",   "action_type": null,   "action_params": null},
+  {"line_number": 7,  "line_type": "AND",  "left_operand": "TrendDown",        "operator": "eq",  "right_operand": "0",   "action_type": null,   "action_params": null},
+  {"line_number": 8,  "line_type": "AND",  "left_operand": "DailyPnL",         "operator": "gt",  "right_operand": "-5",  "action_type": null,   "action_params": null},
+  {"line_number": 9,  "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "BUY",  "action_params": "{\"contracts\": 1}"},
+
+  {"line_number": 10, "line_type": "IF",   "left_operand": "HasPosition",      "operator": "eq",  "right_operand": "1",   "action_type": null,   "action_params": null},
+  {"line_number": 11, "line_type": "AND",  "left_operand": "YES_price",        "operator": "lt",  "right_operand": "72",  "action_type": null,   "action_params": null},
+  {"line_number": 12, "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "SELL", "action_params": "{\"contracts\": 1}"},
+
+  {"line_number": 13, "line_type": "IF",   "left_operand": "HasPosition",      "operator": "eq",  "right_operand": "1",   "action_type": null,   "action_params": null},
+  {"line_number": 14, "line_type": "AND",  "left_operand": "TimeToExpiry",     "operator": "lt",  "right_operand": "1",   "action_type": null,   "action_params": null},
+  {"line_number": 15, "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "SELL", "action_params": "{\"contracts\": 1}"},
+
+  {"line_number": 16, "line_type": "IF",   "left_operand": "TrendUp",          "operator": "eq",  "right_operand": "1",   "action_type": null,   "action_params": null},
+  {"line_number": 17, "line_type": "AND",  "left_operand": "ConsecutiveUp",    "operator": "lte", "right_operand": "4",   "action_type": null,   "action_params": null},
+  {"line_number": 18, "line_type": "AND",  "left_operand": "HasPosition",      "operator": "eq",  "right_operand": "0",   "action_type": null,   "action_params": null},
+  {"line_number": 19, "line_type": "AND",  "left_operand": "RestingLimitCount","operator": "eq",  "right_operand": "0",   "action_type": null,   "action_params": null},
+  {"line_number": 20, "line_type": "AND",  "left_operand": "YES_price",        "operator": "gt",  "right_operand": "28",  "action_type": null,   "action_params": null},
+  {"line_number": 21, "line_type": "AND",  "left_operand": "YES_price",        "operator": "lt",  "right_operand": "66",  "action_type": null,   "action_params": null},
+  {"line_number": 22, "line_type": "AND",  "left_operand": "TimeToExpiry",     "operator": "gt",  "right_operand": "6",   "action_type": null,   "action_params": null},
+  {"line_number": 23, "line_type": "AND",  "left_operand": "AbsPositionSize",  "operator": "lt",  "right_operand": "3",   "action_type": null,   "action_params": null},
+  {"line_number": 24, "line_type": "AND",  "left_operand": "DailyPnL",         "operator": "gt",  "right_operand": "-4",  "action_type": null,   "action_params": null},
+  {"line_number": 25, "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "LIMIT","action_params": "{\"contracts\": 1, \"price_var\": \"Ask\", \"side\": \"yes\"}"},
+
+  {"line_number": 26, "line_type": "IF",   "left_operand": "HasPosition",      "operator": "eq",  "right_operand": "1",   "action_type": null,   "action_params": null},
+  {"line_number": 27, "line_type": "AND",  "left_operand": "YES_price",        "operator": "gt",  "right_operand": "76",  "action_type": null,   "action_params": null},
+  {"line_number": 28, "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "SELL", "action_params": "{\"contracts\": 1}"},
+
+  {"line_number": 29, "line_type": "IF",   "left_operand": "HasPosition",      "operator": "eq",  "right_operand": "1",   "action_type": null,   "action_params": null},
+  {"line_number": 30, "line_type": "AND",  "left_operand": "ConsecutiveDown",  "operator": "gte", "right_operand": "2",   "action_type": null,   "action_params": null},
+  {"line_number": 31, "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "SELL", "action_params": "{\"contracts\": 1}"},
+
+  {"line_number": 32, "line_type": "IF",   "left_operand": "OldestRestingLimitAgeSec","operator": "gt","right_operand": "30","action_type": null,  "action_params": null},
+  {"line_number": 33, "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "CANCEL_STALE", "action_params": "{\"max_age_ms\": 30000}"},
+
+  {"line_number": 34, "line_type": "IF",   "left_operand": "HasPosition",      "operator": "eq",  "right_operand": "1",   "action_type": null,   "action_params": null},
+  {"line_number": 35, "line_type": "AND",  "left_operand": "TimeToExpiry",     "operator": "lt",  "right_operand": "2",   "action_type": null,   "action_params": null},
+  {"line_number": 36, "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "SELL", "action_params": "{\"contracts\": 1}"},
+
+  {"line_number": 37, "line_type": "IF",   "left_operand": "DailyPnL",         "operator": "lt",  "right_operand": "-5",  "action_type": null,   "action_params": null},
+  {"line_number": 38, "line_type": "THEN", "left_operand": null,               "operator": null,  "right_operand": null,  "action_type": "STOP", "action_params": "{}"}
+]

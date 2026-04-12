@@ -11,6 +11,7 @@ import TradeLog from './components/TradeLog/TradeLog';
 import PortfolioScreen from './components/Portfolio/PortfolioScreen';
 import SettingsScreen from './components/Settings/SettingsScreen';
 import VarsPanel from './components/Vars/VarsPanel';
+import BotDebugLog from './components/DebugLog/BotDebugLog';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -66,8 +67,11 @@ export default function App() {
     init();
   }, []);
 
+  /** Main tabs except VARS — VARS stays mounted in a sibling layer so polling and data survive tab switches. */
   const renderTab = () => {
     switch (activeTab) {
+      case 'vars':
+        return null;
       case 'bots':
         return (
           <ErrorBoundary name="Bot List">
@@ -114,10 +118,10 @@ export default function App() {
             <TradeLog />
           </ErrorBoundary>
         );
-      case 'vars':
+      case 'debug':
         return (
-          <ErrorBoundary name="Live variables">
-            <VarsPanel />
+          <ErrorBoundary name="Bot Debug Log">
+            <BotDebugLog />
           </ErrorBoundary>
         );
       case 'settings':
@@ -138,7 +142,22 @@ export default function App() {
         <SentimentStrip />
       </div>
       <TopNav />
-      <main className="flex-1 overflow-hidden pb-14 md:pb-0">{renderTab()}</main>
+      <main className="flex-1 overflow-hidden pb-14 md:pb-0 relative min-h-0">
+        <div
+          className={`absolute inset-0 flex flex-col min-h-0 overflow-hidden ${activeTab === 'vars' ? '' : 'hidden'}`}
+          aria-hidden={activeTab !== 'vars'}
+        >
+          <ErrorBoundary name="Live variables">
+            <VarsPanel />
+          </ErrorBoundary>
+        </div>
+        <div
+          className={`absolute inset-0 flex flex-col min-h-0 overflow-hidden ${activeTab === 'vars' ? 'hidden' : ''}`}
+          aria-hidden={activeTab === 'vars'}
+        >
+          {renderTab()}
+        </div>
+      </main>
       <BottomNav />
     </div>
   );

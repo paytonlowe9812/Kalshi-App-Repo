@@ -1,0 +1,4 @@
+{
+  "summary": "Investigated active rule execution and confirmed the root cause of unexpected LIMIT attempts: consecutive IF lines were being evaluated as overwrites instead of a combined condition chain, allowing line 3 LIMIT to fire from RestingLimitCount alone. Implemented evaluator and simulator fixes so consecutive IF lines are treated as implicit AND in a condition block, verified behavior with direct runtime checks, and applied an immediate live-rule hotfix for 12 affected bots by changing line 2 to AND and normalizing line 3 LIMIT params to explicit buy direction with side matching each bot's contract_side.",
+  "current_status": "Condition-chain evaluation now honors TimeToExpiry gating, affected bot rules are patched in the database for immediate safety, and LIMIT parameters for NO bots are corrected; backend files remain modified in working tree awaiting restart/normal deployment flow."
+}

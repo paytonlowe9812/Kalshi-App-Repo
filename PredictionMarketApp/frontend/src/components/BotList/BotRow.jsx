@@ -2,6 +2,39 @@ import React from 'react';
 import StatusDot from '../shared/StatusDot';
 import BotActions from './BotActions';
 
+function StartStopButton({ status, onStart, onStop }) {
+  const isRunning = status === 'running';
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        isRunning ? onStop() : onStart();
+      }}
+      title={isRunning ? 'Pause bot' : 'Start bot'}
+      className={`flex items-center justify-center w-7 h-7 shrink-0 border font-mono transition-colors ${
+        isRunning
+          ? 'border-terminal-amber text-terminal-amber hover:bg-terminal-amber/10 active:bg-terminal-amber/20'
+          : 'border-terminal-green-text text-terminal-green-text hover:bg-terminal-green/10 active:bg-terminal-green/20'
+      }`}
+      aria-label={isRunning ? 'Stop bot' : 'Start bot'}
+    >
+      {isRunning ? (
+        /* Pause icon — two vertical bars */
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+          <rect x="1.5" y="1" width="2.5" height="8" />
+          <rect x="6" y="1" width="2.5" height="8" />
+        </svg>
+      ) : (
+        /* Play icon — right-pointing triangle */
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+          <polygon points="2,1 9,5 2,9" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export default function BotRow({ bot, onSelect, onStart, onStop, onCopy, onDelete, onMoveToGroup, availableGroups, selected, onToggleSelect }) {
   return (
     <div
@@ -37,6 +70,11 @@ export default function BotRow({ bot, onSelect, onStart, onStop, onCopy, onDelet
           {bot.status}
         </span>
         <span className="text-[10px] text-terminal-amber-dim font-mono w-10 shrink-0 text-right tabular-nums">{bot.run_count || 0}</span>
+        <StartStopButton
+          status={bot.status}
+          onStart={() => onStart(bot.id)}
+          onStop={() => onStop(bot.id)}
+        />
         <BotActions
           bot={bot}
           groups={availableGroups}
@@ -79,6 +117,11 @@ export default function BotRow({ bot, onSelect, onStart, onStop, onCopy, onDelet
             </span>
           </div>
         </div>
+        <StartStopButton
+          status={bot.status}
+          onStart={() => onStart(bot.id)}
+          onStop={() => onStop(bot.id)}
+        />
         <BotActions
           bot={bot}
           groups={availableGroups}

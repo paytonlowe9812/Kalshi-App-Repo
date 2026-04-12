@@ -44,7 +44,7 @@ export default function TradeLog() {
 
   const groupedByDay = {};
   trades.forEach((t) => {
-    const day = t.logged_at ? t.logged_at.split('T')[0] : t.logged_at?.split(' ')[0] || 'unknown';
+    const day = t.logged_at ? t.logged_at.replace('T', ' ').split(' ')[0] : 'unknown';
     if (!groupedByDay[day]) groupedByDay[day] = [];
     groupedByDay[day].push(t);
   });
@@ -78,6 +78,14 @@ export default function TradeLog() {
           <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input-field text-xs md:text-sm flex-shrink-0" />
           <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input-field text-xs md:text-sm flex-shrink-0" />
           <button onClick={clearFilters} className="btn-secondary text-xs py-1.5 md:py-1 flex-shrink-0">CLEAR</button>
+          <button
+            onClick={async () => {
+              await fetch('/api/logs/settle-now', { method: 'POST' });
+              fetchTrades();
+            }}
+            className="btn-secondary text-xs py-1.5 md:py-1 flex-shrink-0 text-terminal-green-text border-terminal-green-text/40"
+            title="Scan Kalshi for settled contracts and fill in P&L"
+          >SETTLE P&amp;L</button>
         </div>
       </div>
 

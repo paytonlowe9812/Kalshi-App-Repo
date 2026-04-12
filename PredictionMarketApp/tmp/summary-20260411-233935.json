@@ -1,0 +1,4 @@
+{
+  "summary": "Converted the ruleset builder guide into a real Word document as requested. Installed python-docx and pillow, created a small conversion script at tmp/build_rules_guide_docx.py, and generated tmp/ruleset-builder-complete-guide.docx by transforming the existing guide markdown into document headings, lists, and embedded screenshots.",
+  "current_status": "A usable .docx guide now exists in tmp with images embedded; the markdown source remains in place and can be ignored if only document formats are needed."
+}

@@ -1,0 +1,4 @@
+{
+  "summary": "User requested a systematic runtime-first audit of all VARS values without narrowing to one symptom. I added debug instrumentation in backend/engine/variables.py with hypothesis-tagged NDJSON logs for daily PnL resolution, per-index market source selection, index aggregates, bot-market source path, portfolio/position/resting derivation, user-variable parse outcomes, trend resolution, and final global/bot snapshots of resolved variables. I also attempted to clear the session log file and confirmed it was absent, so the next run starts clean.",
+  "current_status": "Instrumentation is active and ready for a reproduction run to collect runtime evidence for every variable path before any fix is attempted."
+}

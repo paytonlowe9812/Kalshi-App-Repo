@@ -1,0 +1,4 @@
+{
+  "summary": "Processed the request to restart all services. Checked existing terminal processes, found overlapping/stale listeners from prior runs, restarted service processes, and verified both backend and frontend endpoints return HTTP 200.",
+  "current_status": "Services are up: backend on http://127.0.0.1:8000 and frontend on http://127.0.0.1:5173. Active dev servers are running again after restart."
+}

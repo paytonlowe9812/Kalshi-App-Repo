@@ -1,0 +1,4 @@
+{
+  "summary": "Investigated why market search does not show everything visible on Kalshi by tracing the frontend MarketBrowser query behavior and backend /api/markets filtering logic. Identified key constraints: open-only status fetches, curated/partial series universe, one-strike-per-event deduping, hard result caps, and no cursor pagination for exhaustive retrieval. No code changes were made in this turn.",
+  "current_status": "Root cause for incomplete market search coverage is understood and ready for implementation if the user wants full-universe, paginated, all-strike search behavior."
+}

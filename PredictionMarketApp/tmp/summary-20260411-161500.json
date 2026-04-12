@@ -1,0 +1,4 @@
+{
+  "summary": "Investigated the report that Bid Ask and Last looked wrong in VARS with runtime logs, confirmed bot market rows are sourced from the selected bot ticker and side, fixed a NO-side LastTraded bug by flipping LastTraded with contract side, and added VARS context metadata plus UI messaging so the exact ticker side scope is visible and less confusing against index rows.",
+  "current_status": "Debug instrumentation remains active. LastTraded for NO bots now resolves side-correct in runtime evidence. VARS now displays bot side and ticker context. Bid Ask values still reflect the configured bot ticker feed and can differ from index rows when tickers differ."
+}

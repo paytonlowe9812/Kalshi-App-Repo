@@ -181,7 +181,29 @@ export default function ActionBuilder({ rule, onUpdate }) {
     onUpdate({ ...rule, action_params: JSON.stringify({ ...params, ...newParams }) });
   };
 
+  const hasExplicitLimitAction =
+    typeof params.order_action === 'string' && String(params.order_action).trim() !== '';
+  const hasLegacyLimitSide = params.side === 'yes' || params.side === 'no';
+  const isLegacyLimitDirection = actionType === 'LIMIT' && hasLegacyLimitSide && !hasExplicitLimitAction;
+  const rawLimitAction = String(
+    hasExplicitLimitAction
+      ? params.order_action
+      : (isLegacyLimitDirection ? (params.side === 'no' ? 'sell' : 'buy') : 'buy')
+  ).toLowerCase();
+  const normalizedLimitAction = rawLimitAction === 'sell' ? 'sell' : 'buy';
+  const normalizedLimitSide =
+    isLegacyLimitDirection ? '' : (params.side === 'yes' || params.side === 'no' ? params.side : '');
+
+  const updateLimitParams = (patch) => {
+    if (isLegacyLimitDirection) {
+      updateParams({ order_action: normalizedLimitAction, side: '', ...patch });
+      return;
+    }
+    updateParams(patch);
+  };
+
   const varProps = { groups, loading, onUpdateParams: updateParams };
+  const limitVarProps = { groups, loading, onUpdateParams: updateLimitParams };
 
   switch (actionType) {
     case 'BUY':
@@ -207,14 +229,25 @@ export default function ActionBuilder({ rule, onUpdate }) {
         <div className="flex flex-wrap items-center gap-1 text-xs font-mono">
           <span className="text-terminal-amber font-semibold">LIMIT</span>
           <select
-            value={params.side || 'yes'}
-            onChange={(e) => updateParams({ side: e.target.value })}
+            value={normalizedLimitAction}
+            onChange={(e) => updateLimitParams({ order_action: e.target.value })}
             className="input-field text-xs py-0.5"
           >
-            <option value="yes">BUY</option>
-            <option value="no">SELL</option>
+            <option value="buy">BUY</option>
+            <option value="sell">SELL</option>
           </select>
-          <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} fieldLabel="Qty" ariaLabel="Contract count" {...varProps} />
+          <span className="text-terminal-amber-dim">side</span>
+          <select
+            value={normalizedLimitSide}
+            onChange={(e) => updateLimitParams({ side: e.target.value })}
+            className="input-field text-xs py-0.5"
+            title="Contract side override (empty uses bot contract side)"
+          >
+            <option value="">BOT</option>
+            <option value="yes">YES</option>
+            <option value="no">NO</option>
+          </select>
+          <VarOrNumeric params={params} paramKey="contracts" varKey="contracts_var" fallback={1} min={1} fieldLabel="Qty" ariaLabel="Contract count" {...limitVarProps} />
           <span className="text-terminal-amber-dim">at</span>
           <VarOrNumeric
             params={params}
@@ -228,7 +261,7 @@ export default function ActionBuilder({ rule, onUpdate }) {
             ariaLabel="Limit price (cents)"
             offsetKey="price_offset"
             offsetAriaLabel="Cents to add after variable (negative subtracts)"
-            {...varProps}
+            {...limitVarProps}
           />
           <span className="text-terminal-amber-dim">cents</span>
         </div>

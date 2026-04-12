@@ -1,0 +1,4 @@
+{
+  "summary": "Fixed VARS stuck on loading: VarsPanel used setInterval so a new fetch started every 1s while prior resolve_all could take >1s; stale completions skipped finally and never cleared initialLoading. Replaced with serialized poll (next tick only after prior fetch completes) and client AbortController 22s timeout. Backend: asyncio.wait_for 25s on resolve_all and resolve_global_live_variables with HTTP 504 on timeout.",
+  "current_status": "VARS should clear loading and show timeout errors instead of spinning forever."
+}

@@ -1,0 +1,4 @@
+{
+  "summary": "Explained ConsecutiveUp vs trades: VARS/live-variables updates trend even when executor skips evaluate outside trading schedule; HasPosition is account-wide per market so 12 bots conflict. Added executor throttled warning every 120s when schedule blocks; evaluator warning when THEN matches but action_type empty.",
+  "current_status": "User should confirm schedule + HasPosition on same snapshot; logs guide misconfig."
+}

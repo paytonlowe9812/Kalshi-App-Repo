@@ -1,0 +1,4 @@
+{
+  "summary": "Validated VARS directly in the Cursor browser by navigating the app, switching from global scope to selected bots, and correlating on-screen values with runtime instrumentation in debug-ace8d7.log. The logs show index variables are sourced from Kalshi REST implied values with no fallback-50 path, bot-market variables for tested bots use ws_tight_book_bid with consistent side-aware bid/ask behavior, portfolio fields are zero from a no-position/no-resting path, user vars parse without failures, and trend source keys are present.",
+  "current_status": "No data-pipeline defect is proven from this run; instrumentation remains active for deeper edge-case captures (non-zero positions, user vars, or unavailable data branches)."
+}

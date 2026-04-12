@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import datetime, timezone
 
@@ -131,7 +132,7 @@ def get_available_variables(id: int):
             {"name": "NO_price",  "desc": "NO implied price (0-100)"},
             {"name": "Bid",       "desc": "Best bid for your contract side (0-100)"},
             {"name": "Ask",       "desc": "Best ask for your contract side (0-100)"},
-            {"name": "LastTraded","desc": "Last traded price (0-100)"},
+            {"name": "LastTraded","desc": "Last traded price for your contract side (0-100)"},
             {"name": "FillPrice", "desc": "Your entry price on this market"},
             {"name": "TimeToExpiry",      "desc": "Minutes until market expiry"},
             {"name": "DistanceFromStrike","desc": "Distance of current price from strike"},
@@ -151,11 +152,11 @@ def get_available_variables(id: int):
             },
             {
                 "name": "HasPosition",
-                "desc": "This bot's market only: 1 if any open position on this ticker, else 0",
+                "desc": "This bot's market only: 1 if any open position on this ticker, else 0. The executor also refuses duplicate BUY while positioned and duplicate SELL while flat.",
             },
             {
                 "name": "RestingLimitCount",
-                "desc": "Resting limit orders on this bot's market (Kalshi API)",
+                "desc": "Resting limit orders on this bot's market (Kalshi API). While >0, the executor will not place another LIMIT (prevents per-tick spam if rules omit IF RestingLimitCount eq 0).",
             },
             {
                 "name": "OldestRestingLimitAgeSec",
@@ -224,19 +225,34 @@ def get_available_variables(id: int):
     return {"groups": groups}
 
 
+_LIVE_VARS_TIMEOUT_SEC = 25.0
+
+
 @router.get("/{id}/live-variables")
 async def get_live_variables(id: int):
     """Resolved variable values for the active bot (Kalshi + indexes + user vars)."""
     db = get_db()
-    if not db.execute("SELECT 1 FROM bots WHERE id = ?", (id,)).fetchone():
+    bot_row = db.execute(
+        "SELECT market_ticker, contract_side FROM bots WHERE id = ?",
+        (id,),
+    ).fetchone()
+    if not bot_row:
         raise HTTPException(404, "Bot not found")
     from backend.engine.variables import resolve_all
     from backend.kalshi.client import get_kalshi_client
 
-    vals = await resolve_all(id)
+    try:
+        vals = await asyncio.wait_for(resolve_all(id), timeout=_LIVE_VARS_TIMEOUT_SEC)
+    except TimeoutError:
+        raise HTTPException(
+            504,
+            "live-variables timed out (Kalshi or index fetches too slow); try again",
+        )
     return {
         "bot_id": id,
         "scope": "bot",
+        "market_ticker": bot_row["market_ticker"] or "",
+        "contract_side": _contract_side_value(bot_row),
         "kalshi_client_configured": get_kalshi_client() is not None,
         "variables": vals,
         "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -379,6 +395,30 @@ def copy_bot(id: int):
         )
     db.commit()
     return {"id": new_id, "status": "copied"}
+
+
+@router.get("/{id}/debug-market")
+async def debug_market(id: int):
+    from backend.database import get_db
+    from backend.kalshi.client import get_kalshi_client
+    from backend.kalshi.websocket import ws_manager
+    db = get_db()
+    bot = db.execute("SELECT * FROM bots WHERE id = ?", (id,)).fetchone()
+    ticker = (dict(bot).get("market_ticker") or "").strip() if bot else ""
+    client = get_kalshi_client()
+    rest_data = None
+    if client and ticker:
+        try:
+            data_raw = await client.get_market(ticker)
+            rest_data = data_raw.get("market", data_raw)
+        except Exception as e:
+            rest_data = {"error": str(e)}
+    snap = ws_manager.get_cached_market(ticker)
+    return {
+        "ticker": ticker,
+        "rest_market": rest_data,
+        "ws_snapshot": snap.dict() if snap else None,
+    }
 
 
 @router.post("/{id}/move")

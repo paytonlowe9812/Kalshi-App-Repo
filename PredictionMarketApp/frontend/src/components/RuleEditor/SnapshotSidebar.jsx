@@ -4,6 +4,7 @@ export default function SnapshotSidebar({ botId, onRestore, open, onClose }) {
   const [snapshots, setSnapshots] = useState([]);
   const [restoring, setRestoring] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [seedingBuiltins, setSeedingBuiltins] = useState(false);
 
   const fetchSnapshots = async () => {
     if (!botId) return;
@@ -15,6 +16,18 @@ export default function SnapshotSidebar({ botId, onRestore, open, onClose }) {
 
   useEffect(() => { fetchSnapshots(); }, [botId]);
   useEffect(() => { if (open) fetchSnapshots(); }, [open]);
+
+  const seedBuiltinStrategies = async () => {
+    if (!botId) return;
+    setSeedingBuiltins(true);
+    try {
+      const res = await fetch(`/api/bots/${botId}/rules/snapshots/builtin`, { method: 'POST' });
+      if (!res.ok) return;
+      await fetchSnapshots();
+    } finally {
+      setSeedingBuiltins(false);
+    }
+  };
 
   const saveSnapshot = async () => {
     const name = prompt('Snapshot name (optional):');
@@ -98,12 +111,21 @@ export default function SnapshotSidebar({ botId, onRestore, open, onClose }) {
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} aria-hidden="true" />
       <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 max-h-[75vh] flex flex-col bg-terminal-bg border border-terminal-amber/60 shadow-glow-sm font-mono">
         <div className="flex items-center justify-between px-3 py-2 border-b border-terminal-border-dim">
-          <span className="panel-header">RULE HISTORY</span>
+          <span className="panel-header">snapshots</span>
           <button onClick={onClose} className="text-terminal-amber-dim hover:text-terminal-amber text-xs">[X]</button>
         </div>
-        <div className="px-3 py-2 border-b border-terminal-border-dim">
+        <div className="px-3 py-2 border-b border-terminal-border-dim space-y-2">
           <button onClick={saveSnapshot} className="btn-secondary text-xs w-full py-1">
             SAVE SNAPSHOT
+          </button>
+          <button
+            type="button"
+            onClick={seedBuiltinStrategies}
+            disabled={seedingBuiltins}
+            className="btn-secondary text-xs w-full py-1 disabled:opacity-40"
+            title="Insert or refresh all built-in strategy templates"
+          >
+            {seedingBuiltins ? 'LOADING...' : 'LOAD BUILT-IN STRATEGIES'}
           </button>
         </div>
 

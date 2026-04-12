@@ -1,0 +1,4 @@
+{
+  "summary": "User reported persistent too many orders in trade history. Root cause: HasPosition/RestingLimitCount come from resolve_all at loop start; Kalshi can show a new resting order or fill before the next tick, so variable-based guards alone allowed duplicate BUY/LIMIT on fast intervals. Added _exchange_position_and_resting() in actions.py: immediate get_positions + get_orders(resting) before BUY/LIMIT/SELL; entry blocked if vars OR live show position; LIMIT blocked if vars OR live show resting limits; BUY also blocked if live resting>0; SELL requires position in vars OR live.",
+  "current_status": "PredictionMarketApp: backend/engine/actions.py hardened against API lag. Edited seed strategies with CANCEL_STALE can still cycle cancel+new limit by design; user can widen max_age or remove that block."
+}

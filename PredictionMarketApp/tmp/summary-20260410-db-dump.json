@@ -1,0 +1,4 @@
+{
+  "summary": "User asked 'dump'; interpreted as SQLite full dump. Ran Python sqlite3.Connection.iterdump() on data/app.db and wrote PredictionMarketApp/tmp/app-db-dump.sql (~742KB).",
+  "current_status": "PredictionMarketApp: dump artifact at tmp/app-db-dump.sql. Export API remains GET /api/export/trades for trade_log only."
+}

@@ -1,0 +1,4 @@
+{
+  "summary": "User wanted all built-in strategies injected. Replaced skip-if-exists seeding with upsert_builtin_strategy_snapshots: UPDATE rules_json by snapshot name else INSERT for all five files. init_db still runs upsert against first bot. Added POST /api/bots/{bot_id}/rules/snapshots/builtin and SnapshotSidebar button LOAD BUILT-IN STRATEGIES (5) calling it for current bot.",
+  "current_status": "PredictionMarketApp: every backend start refreshes the five Strategy: * (seed) rows from seed_data when a bot exists; manual inject uses API or sidebar button."
+}

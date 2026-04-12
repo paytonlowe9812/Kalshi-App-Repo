@@ -1,6 +1,8 @@
+import json
 import sqlite3
 import os
 from pathlib import Path
+from typing import List, Tuple
 
 DB_DIR = Path(__file__).resolve().parent.parent / "data"
 DB_PATH = DB_DIR / "app.db"
@@ -218,6 +220,7 @@ DEFAULT_SETTINGS = {
     "example_workspace_seed_completed": "false",
     # LLM assistant provider settings
     "strategy_llm_provider": "groq",
+    "strategy_llm_system_prompt": "",  # Optional extra instructions appended to the built-in prompt
     "strategy_llm_groq_key": "",
     "strategy_llm_gemini_key": "",
     "strategy_llm_mistral_key": "",
@@ -225,6 +228,67 @@ DEFAULT_SETTINGS = {
     "strategy_llm_gemini_model": "",
     "strategy_llm_mistral_model": "",
 }
+
+
+# Built-in rule snapshots (seed JSON under backend/seed_data/). Upsert on init and via API.
+_BUILTIN_STRATEGY_SNAPSHOTS: List[Tuple[str, str]] = [
+    ("strategy_01_trend_rider.json", "Strategy: Trend rider (seed)"),
+    ("strategy_02_dip_buyer.json", "Strategy: Dip buyer (seed)"),
+    ("strategy_03_mid_session.json", "Strategy: Mid-session window (seed)"),
+    ("strategy_04_range_scalp.json", "Strategy: Tight range scalp (seed)"),
+    ("strategy_05_balanced_hybrid.json", "Strategy: Balanced hybrid (seed)"),
+    ("strategy_06_drift_ladder_maker.json", "Strategy: Drift ladder maker (seed)"),
+    ("strategy_07_exhaustion_snapback_maker.json", "Strategy: Exhaustion snapback maker (seed)"),
+    ("strategy_08_late_squeeze_clip.json", "Strategy: Late squeeze clip (seed)"),
+]
+
+
+def upsert_builtin_strategy_snapshots(conn: sqlite3.Connection, bot_id: int) -> dict:
+    """Insert or refresh every built-in strategy snapshot from disk (matched by snapshot name)."""
+    if not conn.execute("SELECT 1 FROM bots WHERE id = ?", (bot_id,)).fetchone():
+        return {"ok": False, "error": "no_bot", "inserted": 0, "updated": 0, "names": []}
+    base = Path(__file__).resolve().parent / "seed_data"
+    inserted = 0
+    updated = 0
+    names: List[str] = []
+    for filename, snap_name in _BUILTIN_STRATEGY_SNAPSHOTS:
+        path = base / filename
+        if not path.is_file():
+            continue
+        try:
+            rules = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        payload = json.dumps(rules)
+        cur = conn.execute(
+            "UPDATE snapshots SET rules_json = ?, bot_id = ? WHERE name = ?",
+            (payload, bot_id, snap_name),
+        )
+        n = cur.rowcount or 0
+        if n:
+            updated += n
+            names.append(snap_name)
+        else:
+            conn.execute(
+                "INSERT INTO snapshots (bot_id, name, rules_json) VALUES (?, ?, ?)",
+                (bot_id, snap_name, payload),
+            )
+            inserted += 1
+            names.append(snap_name)
+    return {
+        "ok": True,
+        "inserted": inserted,
+        "updated": updated,
+        "names": names,
+    }
+
+
+def _seed_builtin_strategy_snapshots(conn: sqlite3.Connection) -> None:
+    """On startup: upsert all built-ins against the first bot (FK owner)."""
+    bot_row = conn.execute("SELECT id FROM bots ORDER BY id LIMIT 1").fetchone()
+    if not bot_row:
+        return
+    upsert_builtin_strategy_snapshots(conn, bot_row[0])
 
 
 def _dedupe_sentiment_index_markets(conn: sqlite3.Connection) -> None:
@@ -305,6 +369,8 @@ def init_db():
                 (bot_id,),
             )
             _set_example_seed_done(conn)
+
+    _seed_builtin_strategy_snapshots(conn)
 
     _dedupe_sentiment_index_markets(conn)
 

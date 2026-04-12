@@ -98,8 +98,11 @@ export default function TrendConfig({ botId, bot, onSave }) {
         <span className="text-[9px] text-terminal-amber-dim font-mono">IN A ROW</span>
       </div>
 
-      <span className="text-[9px] text-terminal-amber-dim/60 font-mono shrink-0">
-        → TrendUp / TrendDown / ConsecutiveUp / ConsecutiveDown
+      <span
+        className="text-[9px] text-terminal-amber-dim/60 font-mono shrink-0 max-w-md leading-snug"
+        title="TrendUp=1 after this many strict up-moves in a row (repeated identical quotes are ignored). If CONFIG trading schedule is ON but no hours are saved, bots used to never run — fixed server-side; still OFF-hours skip evaluation."
+      >
+        → TrendUp / TrendDown (strict up/down price steps; duplicate quotes skipped)
       </span>
     </div>
   );

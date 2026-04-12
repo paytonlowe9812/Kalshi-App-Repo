@@ -1,0 +1,4 @@
+{
+  "summary": "Explained UI badge x33: it is rule line exec_count from RuleLine.jsx, persisted in rules.exec_count and incremented in actions.py when an action runs with fired_line set. Not simulator-only; cumulative executions for that line.",
+  "current_status": "PredictionMarketApp: no code change; user question about Rule Editor xN badge answered with file references."
+}

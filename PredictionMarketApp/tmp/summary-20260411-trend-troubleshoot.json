@@ -1,0 +1,4 @@
+{
+  "summary": "Trend troubleshooting: scheduler now returns True when trading_schedule_enabled but table empty (log warning) so bots are not stuck. Trend engine skips samples when price equals last sampled value so sticky YES_price can still advance on real ticks. variables.py logs once if trend_price_source missing from map with assigned market. TrendConfig hint text updated.",
+  "current_status": "User should verify schedule windows for today, IF TrendUp eq 1 vs 1.0, and watch server logs for schedule/trend warnings."
+}

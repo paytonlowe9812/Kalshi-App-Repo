@@ -1,0 +1,4 @@
+{
+  "summary": "Validated fix status with fresh runtime evidence after clearing logs and triggering bot live-variable resolution. Confirmed NO-side LastTraded mapping is corrected and still aligned with Bid/Ask for the selected bot ticker, while index ETH values can differ due to different ticker sources.",
+  "current_status": "Issue is fixed for LastTraded side-correctness. Instrumentation remains active. Fresh logs were regenerated for bot #19 and show raw YES last traded 0.1 resolving to NO-side LastTraded 99.9."
+}

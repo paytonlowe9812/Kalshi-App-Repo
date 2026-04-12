@@ -43,3 +43,7 @@ launch.sh
 Thumbs.db
 *.swp
 *.swo
+
+# Local DB exports/backups can contain saved LLM/API keys
+tmp/app-db-dump.sql
+tmp/app-backup-*.db

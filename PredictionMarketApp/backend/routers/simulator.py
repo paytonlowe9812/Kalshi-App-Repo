@@ -61,6 +61,7 @@ def run_simulation(data: SimulationRequest):
     visit_counts: dict[int, int] = {}
     final_action = None
     condition_met = False
+    in_condition_chain = False
     rules_list = [dict(r) for r in rules]
 
     while line_index < len(rules_list):
@@ -84,11 +85,12 @@ def run_simulation(data: SimulationRequest):
             result = op_fn(left, right)
 
             if lt == "IF":
-                condition_met = result
+                condition_met = (condition_met and result) if in_condition_chain else result
             elif lt == "AND":
-                condition_met = condition_met and result
+                condition_met = (condition_met and result) if in_condition_chain else result
             elif lt == "OR":
-                condition_met = condition_met or result
+                condition_met = (condition_met or result) if in_condition_chain else result
+            in_condition_chain = True
 
             left_name = rule.get("left_operand", "?")
             right_name = rule.get("right_operand", "?")
@@ -143,6 +145,7 @@ def run_simulation(data: SimulationRequest):
                 steps.append(SimulationStep(
                     line_number=ln, result="skipped", reason="Condition not met"
                 ))
+            in_condition_chain = False
             line_index += 1
 
         elif lt == "ELSE":
@@ -183,6 +186,7 @@ def run_simulation(data: SimulationRequest):
                 steps.append(SimulationStep(
                     line_number=ln, result="skipped", reason="Condition was met"
                 ))
+            in_condition_chain = False
             line_index += 1
 
         elif lt == "GOTO":
@@ -204,6 +208,7 @@ def run_simulation(data: SimulationRequest):
                 line_index = target_idx
             else:
                 line_index += 1
+            in_condition_chain = False
 
         elif lt == "STOP":
             steps.append(SimulationStep(
@@ -244,12 +249,14 @@ def run_simulation(data: SimulationRequest):
             steps.append(SimulationStep(
                 line_number=ln, result="hit", reason=reason
             ))
+            in_condition_chain = False
             line_index += 1
 
         else:
             steps.append(SimulationStep(
                 line_number=ln, result="skipped", reason=f"Unknown type: {lt}"
             ))
+            in_condition_chain = False
             line_index += 1
 
     return SimulationResponse(

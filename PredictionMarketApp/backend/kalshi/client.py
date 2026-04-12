@@ -177,23 +177,11 @@ class KalshiClient:
         current_ticker: Optional[str] = None,
     ) -> Optional[str]:
         """Find the next open contract in a series, picking the nearest-the-money strike."""
-        result = await self.get_events(
-            limit=5, status="open",
-            series_ticker=series_ticker, with_nested_markets=True,
-        )
-        events = result.get("events", [])
-        if not events:
-            return None
-
-        all_markets = []
-        for evt in events:
-            for m in evt.get("markets", []):
-                status = m.get("status", "")
-                if status not in ("active", "open"):
-                    continue
-                if m.get("ticker") == current_ticker:
-                    continue
-                all_markets.append(m)
+        result = await self.get_markets(series_ticker=series_ticker, status="open", limit=10)
+        all_markets = [
+            m for m in result.get("markets", [])
+            if m.get("status") in ("active", "open")
+        ]
 
         if not all_markets:
             return None
@@ -255,15 +243,32 @@ class KalshiClient:
             "action": api_action,
             "side": api_side,
             "count": count,
-            "type": type,
         }
-        # Kalshi expects yes_price / no_price in cents, each 1-99 (see CreateOrderRequest).
-        if price is not None:
-            p = max(1, min(99, int(round(price))))
-            if api_side == "yes":
-                body["yes_price"] = p
+        order_type = (type or "market").strip().lower()
+        # Kalshi expects yes_price / no_price in cents, each 1-99 (CreateOrderRequest).
+        # type=market without a price is rejected or ineffective on current trade-api; use an
+        # aggressive IOC limit (buy at 99 / sell at 1 on the order side) as market-like behavior.
+        if order_type == "market":
+            body["type"] = "limit"
+            body["time_in_force"] = "immediate_or_cancel"
+            if api_action == "buy":
+                if api_side == "yes":
+                    body["yes_price"] = 99
+                else:
+                    body["no_price"] = 99
             else:
-                body["no_price"] = p
+                if api_side == "yes":
+                    body["yes_price"] = 1
+                else:
+                    body["no_price"] = 1
+        else:
+            body["type"] = order_type
+            if price is not None:
+                p = max(1, min(99, int(round(price))))
+                if api_side == "yes":
+                    body["yes_price"] = p
+                else:
+                    body["no_price"] = p
         return await self._request("POST", "/portfolio/orders", json=body)
 
     async def get_orders(

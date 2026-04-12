@@ -1,0 +1,4 @@
+{
+  "summary": "Added five distinct built-in rule snapshots as JSON under backend/seed_data and replaced single short-futures seeder with _seed_builtin_strategy_snapshots: Trend rider, Dip buyer, Mid-session window, Tight range scalp, Balanced hybrid (content from former short_futures file). Each snapshot name is unique; init_db inserts any missing rows using first bot id. Removed short_futures_snapshot_rules.json in favor of strategy_05_balanced_hybrid.json.",
+  "current_status": "PredictionMarketApp: five Strategy: * (seed) entries appear in snapshot sidebar after restart if at least one bot exists. Legacy Short futures-style algo (seed) DB rows are unchanged if already present."
+}

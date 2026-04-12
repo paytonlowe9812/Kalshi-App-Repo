@@ -8,6 +8,7 @@ const TABS = [
   { id: 'markets', label: 'MARKETS' },
   { id: 'portfolio', label: 'P&L' },
   { id: 'log', label: 'LOG' },
+  { id: 'debug', label: 'DBG' },
   { id: 'vars', label: 'VARS' },
   { id: 'settings', label: 'CONFIG' },
 ];

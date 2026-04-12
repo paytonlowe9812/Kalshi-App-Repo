@@ -5,7 +5,7 @@ export default function TradeLogDay({ date, trades }) {
   const [expanded, setExpanded] = useState(true);
 
   const totalPnl = trades.reduce((sum, t) => sum + (t.pnl || 0), 0);
-  const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+  const dateStr = new Date(date.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

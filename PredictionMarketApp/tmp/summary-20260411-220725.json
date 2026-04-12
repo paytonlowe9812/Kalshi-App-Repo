@@ -1,0 +1,4 @@
+{
+  "summary": "Implemented drag-and-drop rule reordering in the Rule Editor with explicit insert-between drop targets, visual drop-line indicator, and immediate auto-save on drop. Added drag handles to each rule row (desktop and mobile layouts), integrated drop slot logic across the full rule list, and kept existing up/down/delete controls intact.",
+  "current_status": "Users can now drag a rule line and drop it between any two lines (including top and bottom) with automatic renumbering and immediate persistence to the active bot rules endpoint."
+}

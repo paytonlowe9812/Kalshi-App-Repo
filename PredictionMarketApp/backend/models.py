@@ -147,7 +147,8 @@ class Action(BaseModel):
     price_var: Optional[str] = None
     # LIMIT: added to resolved limit price (cents), e.g. -5 with price_var LastTraded.
     price_offset: Optional[float] = None
-    side: Optional[str] = None
+    side: Optional[str] = None          # contract side: "yes" | "no"
+    order_action: Optional[str] = None  # LIMIT order direction: "buy" | "sell"
     var_name: Optional[str] = None
     value: Optional[str] = None
     message: Optional[str] = None

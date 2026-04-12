@@ -1,15 +1,21 @@
 import asyncio
 import logging
+import time
 from backend.database import get_db
 from backend.models import RiskLimitError, InfiniteLoopError
 from backend.engine import evaluator, actions
 from backend.engine.variables import resolve_all
 from backend.engine.risk import check_global_limits
 from backend.engine.scheduler import is_trading_window_active, get_loop_interval
+from backend.engine.bot_logger import log_event
 
 logger = logging.getLogger(__name__)
 
 _running_tasks: dict[int, asyncio.Task] = {}
+_schedule_skip_logged: dict[int, float] = {}
+_idle_skip: dict[int, int] = {}
+_settlement_task: asyncio.Task | None = None
+_auto_roll_task: asyncio.Task | None = None
 
 
 def bot_is_running(bot_id: int) -> bool:
@@ -45,6 +51,8 @@ async def _check_auto_roll(bot_id: int) -> bool:
             mdata = await client.get_market(current_ticker)
             market = mdata.get("market", mdata)
             status = market.get("status", "")
+            if status in ("active", "open"):
+                return False  # Still live — no roll needed
             if status in ("closed", "settled", "determined", "finalized"):
                 needs_roll = True
         except Exception:
@@ -84,6 +92,15 @@ async def run_bot(bot_id: int):
     while bot_is_running(bot_id):
         try:
             if not is_trading_window_active():
+                now = time.time()
+                last = _schedule_skip_logged.get(bot_id, 0.0)
+                if now - last >= 120.0:
+                    _schedule_skip_logged[bot_id] = now
+                    logger.warning(
+                        "Bot %s: outside CONFIG trading schedule — rules are NOT evaluated and no orders run. "
+                        "(VARS / live-variables still updates trend if you open that tab.)",
+                        bot_id,
+                    )
                 await asyncio.sleep(get_loop_interval())
                 continue
 
@@ -105,7 +122,24 @@ async def run_bot(bot_id: int):
             result = evaluator.evaluate(bot_id, variables)
 
             if result.action:
+                db = get_db()
+                _bot_row = db.execute("SELECT name FROM bots WHERE id = ?", (bot_id,)).fetchone()
+                _bot_name = _bot_row["name"] if _bot_row else str(bot_id)
+                log_event(
+                    bot_id, _bot_name, "INFO", "TICK_FIRED",
+                    f"Line {result.fired_line} → {result.action.type}",
+                    {"fired_line": result.fired_line, "action": result.action.type,
+                     "yes_price": variables.get("YES_price"), "no_price": variables.get("NO_price"),
+                     "has_position": variables.get("HasPosition")},
+                )
                 await actions.execute(bot_id, result.action, variables)
+            else:
+                _idle_skip[bot_id] = _idle_skip.get(bot_id, 0) + 1
+                if _idle_skip[bot_id] % 10 == 0:
+                    db = get_db()
+                    _bot_row = db.execute("SELECT name FROM bots WHERE id = ?", (bot_id,)).fetchone()
+                    _bot_name = _bot_row["name"] if _bot_row else str(bot_id)
+                    log_event(bot_id, _bot_name, "DEBUG", "TICK_IDLE", "No condition met", {})
 
             db = get_db()
             db.execute(
@@ -186,7 +220,41 @@ async def stop_all_bots_panic():
                 pass
 
 
+async def _global_auto_roll_loop():
+    """Every 60 s, check ALL bots with auto_roll=1 — running or stopped.
+    If their current ticker is finalized/expired, roll them to the next contract.
+    This ensures stopped bots don't wake up with a dead market."""
+    while True:
+        try:
+            db = get_db()
+            bots = db.execute(
+                "SELECT id FROM bots WHERE auto_roll = 1 AND series_ticker IS NOT NULL AND series_ticker != ''"
+            ).fetchall()
+            for row in bots:
+                try:
+                    await _check_auto_roll(row["id"])
+                except Exception as e:
+                    logger.debug("Global auto-roll bot %s: %s", row["id"], e)
+        except Exception as e:
+            logger.error("Global auto-roll loop error: %s", e)
+        await asyncio.sleep(60)
+
+
+async def _settlement_loop():
+    """Runs every 60 s and back-fills P&L for settled contracts."""
+    from backend.engine.settlement_scanner import scan_and_settle
+    while True:
+        try:
+            n = await scan_and_settle()
+            if n:
+                logger.info("Settlement scanner: updated %d trade_log row(s)", n)
+        except Exception as e:
+            logger.error("Settlement loop error: %s", e)
+        await asyncio.sleep(60)
+
+
 async def start_scheduler():
+    global _settlement_task
     db = get_db()
     running = db.execute(
         "SELECT id FROM bots WHERE status = 'running'"
@@ -197,3 +265,9 @@ async def start_scheduler():
             (r["id"],),
         )
     db.commit()
+    # Start background settlement scanner.
+    _settlement_task = asyncio.create_task(_settlement_loop())
+    logger.info("Settlement scanner started")
+    # Start background auto-roll for ALL bots (running or stopped).
+    _auto_roll_task = asyncio.create_task(_global_auto_roll_loop())
+    logger.info("Global auto-roll loop started")

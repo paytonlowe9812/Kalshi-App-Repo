@@ -1,0 +1,4 @@
+{
+  "summary": "Created a very detailed instructional guide for the ruleset builder and saved it to tmp/ruleset-builder-complete-guide.md. Captured fresh real UI screenshots from the running app for bot selection, editor overview, condition/action rows, LIMIT + cancel stale examples, and the snapshots modal, then embedded those images directly in the guide. Also documented all major builder elements, including header controls, trend config, line toolbar, condition/action builders, drag-and-drop insertion behavior, snapshot workflows, bulk edit mode, autosave behavior, and the desktop strategy assistant panel.",
+  "current_status": "Ruleset builder documentation is now generated with screenshot-backed instructions in tmp/ruleset-builder-complete-guide.md; no code logic changes were made to backend/frontend functionality in this turn."
+}

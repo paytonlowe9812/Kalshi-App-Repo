@@ -1,0 +1,4 @@
+{
+  "summary": "VARS tab: VarsPanel always mounted in App main inside an absolute layer toggled with hidden vs other tabs, so polling and payload survive tab switches. VarsPanel only shows blocking loading until first success; later polls use subtle refresh indicator and keep last payload visible. Fixed stale references to loading variable.",
+  "current_status": "Live vars warm in background; returning to VARS shows cached data immediately."
+}

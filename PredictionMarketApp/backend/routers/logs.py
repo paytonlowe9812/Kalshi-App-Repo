@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from backend.database import get_db
+from backend.engine.bot_logger import get_events
 
 router = APIRouter(prefix="/api/logs", tags=["logs"])
 
@@ -79,3 +80,29 @@ def export_logs(
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=trades.csv"},
     )
+
+
+@router.get("/bot-events")
+def get_bot_events(since_id: int = 0, bot_id: Optional[int] = None, limit: int = 200):
+    events = get_events(since_id=since_id, bot_id=bot_id if bot_id else None, limit=limit)
+    return [
+        {
+            "id": e.id,
+            "ts": e.ts,
+            "bot_id": e.bot_id,
+            "bot_name": e.bot_name,
+            "level": e.level,
+            "event": e.event,
+            "message": e.message,
+            "details": e.details,
+        }
+        for e in events
+    ]
+
+
+@router.post("/settle-now")
+async def trigger_settlement_scan():
+    """Manually trigger the settlement scanner (don't wait for the 60s loop)."""
+    from backend.engine.settlement_scanner import scan_and_settle
+    n = await scan_and_settle()
+    return {"updated": n}
