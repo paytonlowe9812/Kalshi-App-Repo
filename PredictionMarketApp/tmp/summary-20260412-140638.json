@@ -1,0 +1,4 @@
+{
+  "summary": "User clarified rules use LastTraded for both IF bounds and LIMIT price (LastTraded-1), not Bid. Explained that in one tick that implies submitted limit is in ~57-89c if conditions pass; sub-5c usually means viewing Kalshi fill (limit buys fill at or below limit) or a different bot/ticker. Added ORDER_PLACED event details for LIMIT (price_var, price_offset, last_traded) to disambiguate. Prior LastTraded/book coherence fix in variables.py still relevant when API last lags book.",
+  "current_status": "actions.py logging enriched; restart backend to use. User can compare ORDER_PLACED details vs exchange fill price."
+}

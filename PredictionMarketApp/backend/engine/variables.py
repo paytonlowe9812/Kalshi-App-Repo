@@ -114,6 +114,36 @@ def _apply_bot_rest_enrichment(ticker: str, market: dict, variables: dict) -> No
             variables["LastTraded"] = _f(lt)
             break
 
+    # Coherence: last-trade fields can lag or disagree with the live YES book (stale REST
+    # last vs current bid/ask). Rules that gate on LastTraded but price LIMIT from Bid
+    # then see "LastTraded > 58" while Bid is a few cents — not a fast market move, a
+    # feed mismatch. When we have a real YES book, snap LastTraded to book mid if the
+    # stored last print is implausible relative to that book (YES space, before NO flip).
+    if has_real_book:
+        lt = float(variables.get("LastTraded") or 0.0)
+        yb_f = float(variables.get("Bid") or 0.0)
+        ya_f = float(variables.get("Ask") or 0.0)
+        if lt >= 1.0 and yb_f >= 1.0 and ya_f >= 1.0:
+            mid = round((yb_f + ya_f) / 2.0, 2)
+            if lt > ya_f + 10.0 and yb_f < 15.0:
+                logger.debug(
+                    "LastTraded %.2f vs YES book bid/ask %.2f/%.2f implausible; using mid %.2f",
+                    lt,
+                    yb_f,
+                    ya_f,
+                    mid,
+                )
+                variables["LastTraded"] = mid
+            elif lt < yb_f - 10.0 and ya_f > 85.0:
+                logger.debug(
+                    "LastTraded %.2f vs YES book bid/ask %.2f/%.2f implausible; using mid %.2f",
+                    lt,
+                    yb_f,
+                    ya_f,
+                    mid,
+                )
+                variables["LastTraded"] = mid
+
 
 # Canonical bot-market keys (placeholders when no market is assigned or data missing).
 _BOT_MARKET_KEYS = (

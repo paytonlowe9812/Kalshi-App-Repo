@@ -1,0 +1,4 @@
+{
+  "summary": "Explained LastTraded vs Bid mismatch: conditions can use last-trade while LIMIT uses Bid+offset; feeds can disagree when last is stale vs book. Added YES-book coherence in _apply_bot_rest_enrichment: if last print is implausible vs bid/ask (high last with floored bid, or symmetric), LastTraded snaps to book mid before NO-side flip.",
+  "current_status": "variables.py updated; backend restart needed locally to pick up change. User should still align rule gates and price_var (e.g. both LastTraded or add Bid bounds) for clearest behavior."
+}

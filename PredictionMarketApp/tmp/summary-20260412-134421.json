@@ -1,0 +1,4 @@
+{
+  "summary": "User acknowledged the prior work. No new tasks were requested. CANCEL_STALE was previously changed to cancel only resting LIMIT BUY orders (not LIMIT SELL); backend was restarted and simulator copy updated to match.",
+  "current_status": "PredictionMarketApp: limit sell path hardened, buy-only stale cancel in place, executor TICK_IDLE diagnostics added; uncommitted changes in backend/engine/actions.py, backend/engine/executor.py, backend/routers/simulator.py."
+}

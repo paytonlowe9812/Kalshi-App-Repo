@@ -1,0 +1,4 @@
+{
+  "summary": "Explained why LIMIT orders can appear outside user-expected price ranges: IF Bid bounds only gate execution, not the submitted limit price; LIMIT uses literal or price_var+offset separately; only 1-99 clamp applies; NO bots remap Bid/Ask via 100-yes_ask / 100-yes_bid so numbers differ from YES UI.",
+  "current_status": "PredictionMarketApp: CANCEL_STALE buy-only, limit sell fixes, executor idle diagnostics in place; user question answered without code change."
+}

@@ -463,7 +463,15 @@ async def execute(bot_id: int, action: Action, variables: dict):
                 count_this_line = True
                 log_event(bot_id, bot_name, "INFO", "ORDER_PLACED",
                           f"LIMIT SELL {contracts} @ {api_price}¢  [{ticker}]",
-                          {"action": "LIMIT_SELL", "contracts": contracts, "price": api_price, "ticker": ticker})
+                          {
+                              "action": "LIMIT_SELL",
+                              "contracts": contracts,
+                              "price": api_price,
+                              "ticker": ticker,
+                              "price_var": action.price_var,
+                              "price_offset": action.price_offset,
+                              "last_traded": variables.get("LastTraded"),
+                          })
                 _log_trade(bot_id, bot["name"], ticker, f"LIMIT_{lim_side.upper()}_SELL",
                            contracts, float(api_price), action.fired_line)
             else:
@@ -472,7 +480,16 @@ async def execute(bot_id: int, action: Action, variables: dict):
                 count_this_line = True
                 log_event(bot_id, bot_name, "INFO", "ORDER_PLACED",
                           f"LIMIT BUY {contracts} @ {api_price}¢  [{ticker}]  side={lim_side}",
-                          {"action": "LIMIT", "contracts": contracts, "price": api_price, "side": lim_side, "ticker": ticker})
+                          {
+                              "action": "LIMIT",
+                              "contracts": contracts,
+                              "price": api_price,
+                              "side": lim_side,
+                              "ticker": ticker,
+                              "price_var": action.price_var,
+                              "price_offset": action.price_offset,
+                              "last_traded": variables.get("LastTraded"),
+                          })
                 _log_trade(bot_id, bot["name"], ticker, f"LIMIT_{lim_side.upper()}",
                            contracts, float(api_price), action.fired_line)
 
